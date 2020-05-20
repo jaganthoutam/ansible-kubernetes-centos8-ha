@@ -44,9 +44,9 @@
   when: inventory_hostname in groups['kubernetes_master'][0]
   tags: get_k8s_version
 
-#https://raw.githubusercontent.com/jaganthoutam/easy-kubeadm/master/roles/kubernetes/files/kube-flannel.yml
+#https://raw.githubusercontent.com/jaganthoutam/ansible-kubernetes-centos8-ha/master/roles/kubernetes/files/kube-flannel.yml
 - name: Install overlay network
-  shell: "kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://raw.githubusercontent.com/jaganthoutam/easy-kubeadm/master/roles/kubernetes/files/kube-flannel.yml"
+  shell: "kubectl --kubeconfig /etc/kubernetes/admin.conf apply -f https://raw.githubusercontent.com/jaganthoutam/ansible-kubernetes-centos8-ha/master/roles/kubernetes/files/kube-flannel.yml"
   when: inventory_hostname in groups['kubernetes_master'][0]
   tags: install_flannel_overlay_network
 
