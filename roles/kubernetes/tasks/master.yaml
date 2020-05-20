@@ -26,6 +26,10 @@
   when: inventory_hostname in groups['kubernetes_master'][0] and stat_k8s_result.stat.exists == False
   tags: init_kubernetes_master
 
+#Trust me you need this... Learned with pain.
+- name: wait for 120 sec
+  wait_for: timeout=120
+
 - name: Generate master join command from master
   shell: "kubeadm token create --print-join-command --certificate-key {{ kubeadm_certificate_key }}"
   register: kubeadm_join_control_plane_command
