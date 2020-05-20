@@ -19,6 +19,7 @@ control_plane_multi_master: true
 #flannel network # only one network plugin should be enable either weave or flannel
 flannel: true
 flannel_network: "10.244.0.0/16"
+network_zone: public
 
 # HAProxy
 haproxy:
