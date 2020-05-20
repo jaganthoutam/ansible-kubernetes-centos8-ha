@@ -1,4 +1,63 @@
 ---
+- name: Disable swap
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  tags: swap
+
+- name: Disable swap permanently, persist reboots
+  replace:
+    path: /etc/fstab
+    regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
+    replace: '#\1\2\3swap\4'
+    backup: yes
+  tags: swap
+
+- name: install utils
+  yum:
+    name:
+      - iproute-tc
+      - bind-utils
+    state: installed
+  tags: install_utils
+
+- name: Install Kubernetes Repository
+  copy:
+    src: kubernetes.repo
+    dest: /etc/yum.repos.d/kubernetes.repo
+    mode: 0644
+  tags: add_kubernetes_repo
+
+- name: Install Kubernetes packages
+  yum:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    disable_excludes: kubernetes
+    state: latest
+  tags: install_kubernetes_packages
+
+# Defining cgroup-driver
+- name: Define sysconfig kubelet
+  template:
+    src: "sysconfig_kubelet.j2"
+    dest: "/etc/sysconfig/kubelet"
+    owner: root
+    group: root
+  tags: define_sysconfig_kubelet
+
+- name: Enable kubelet systemctl
+  service:
+    name: kubelet
+    state: stopped
+    enabled: yes
+  tags: start_kubelet
+[root@GT-CRC-U165 ansible-kubernetes-centos8-ha]# cat roles/kubernetes/tasks/m
+cat: roles/kubernetes/tasks/m: No such file or directory
+[root@GT-CRC-U165 ansible-kubernetes-centos8-ha]# cat roles/kubernetes/tasks/ma
+cat: roles/kubernetes/tasks/ma: No such file or directory
+[root@GT-CRC-U165 ansible-kubernetes-centos8-ha]# cat roles/kubernetes/tasks/master.yaml
+---
 - name: Generate join control plane cert from first master
   shell: "kubeadm alpha certs certificate-key"
   register: kubeadm_join_control_plane_cert
@@ -26,7 +85,6 @@
   when: inventory_hostname in groups['kubernetes_master'][0] and stat_k8s_result.stat.exists == False
   tags: init_kubernetes_master
 
-#Trust me you need this... Learned with pain.
 - name: wait for 120 sec
   wait_for: timeout=120
 
@@ -35,6 +93,7 @@
   register: kubeadm_join_control_plane_command
   when: inventory_hostname in groups['kubernetes_master'][0]
   tags: kubeadm_join_control_plane_command
+
 
 - name: Generate worker join command from master
   shell: "kubeadm token create --print-join-command"
@@ -56,16 +115,16 @@
 
 - name: Start secondary master nodes
   shell: "{{ hostvars[groups['kubernetes_master'][0]].kubeadm_join_control_plane_command.stdout_lines[-1] }}"
-  when: 
-    - inventory_hostname in groups['kubernetes_master'][1:] 
-    - control_plane_multi_master|bool 
+  when:
+    - inventory_hostname in groups['kubernetes_master'][1:]
+    - control_plane_multi_master|bool
     - stat_k8s_result.stat.exists == False
   tags: init_secondary_kubernetes_masters
 
 - name: Create kubeconfig directory in root user directory
   file:
     path: "/root/.kube/"
-    state: directory 
+    state: directory
     mode: 0755
   when: inventory_hostname in groups['kubernetes_master']
   tags: copy_kubeconfig
@@ -131,5 +190,4 @@
   shell: "kubectl apply -f /etc/kubernetes/default/"
   when: inventory_hostname in groups['kubernetes_master'][0]
   tags: install_demo_app_with_ingess
-
 
