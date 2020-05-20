@@ -3,6 +3,7 @@
   hosts: all
   roles:
   - role: base
+  - role: ipv6disable
 
 - name: haproxy
   hosts: kubernetes_master 
