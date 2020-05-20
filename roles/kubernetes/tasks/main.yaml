@@ -1,4 +1,5 @@
 ---
+-include: firewalld.yaml
 
 - include: ipvs_config.yaml
   when: kubernetes_ipvs_enabled
