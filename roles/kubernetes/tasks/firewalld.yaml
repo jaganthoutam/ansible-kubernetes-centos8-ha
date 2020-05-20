@@ -1,0 +1,43 @@
+- name: Enable firewalld service
+  systemd:
+    state: restarted
+    daemon_reload: yes
+    name: firewalld
+    enabled: yes
+
+- name: Open ports
+  firewalld:
+    port: "{{item}}"
+    zone: {{ network_zone }}
+    permanent: true
+    state: enabled
+  with_items:
+    - 6443/tcp
+    - 5443/tcp
+    - 2379-2380/tcp
+    - 10250/tcp
+    - 10251/tcp
+    - 10252/tcp
+    - 10053/tcp
+    - 10053/udp
+    - 10255/tcp
+    - 30000-32767/tcp
+    - 8080/tcp
+    - 8082/tcp
+    - 8472/udp
+    - 8285/udp
+    - 9898/tcp
+    - 9100/tcp
+    - 443/tcp
+    - 53/tcp
+    - 53/udp
+    - 4194/tcp
+    - 10254/tcp
+
+# Port forwarding requires masquerading - https://www.certdepot.net/rhel7-get-started-firewalld/
+# Network Zones - https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/security_guide/sec-using_firewalls#sec-Understanding_Network_Zones
+- name: Enable IP masquerading
+  shell: "firewall-cmd --permanent --zone={{ network_zone }} --add-masquerade"
+
+- name: Reload firewalld
+  shell: firewall-cmd --reload
