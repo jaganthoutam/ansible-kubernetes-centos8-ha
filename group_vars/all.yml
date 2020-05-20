@@ -31,8 +31,8 @@ haproxy:
 
 keepalived:
   enabled: true
-  interface: eth1
-  shared_ip: 10.0.0.200      # Virtual IP
+  interface: ens192
+  shared_ip: 192.168.0.156      # Virtual IP
   vrid: 110                     # Virtual Router ID
   adv_interval: 1               # VRRP advert interval
   authtype: PASS                # 'PASS' (simple password) or 'AH' (IPSEC)
