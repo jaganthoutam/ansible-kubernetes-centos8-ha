@@ -19,15 +19,14 @@
         dest: /etc/yum.repos.d/docker-ce.repo
       become: yes
 
-    - name: Search for package
-      yum:
-        list: containerd.io.x86_64
-      register: package_list
+    - name: "Check if containerd.io is installed"
+      package_facts:
+        manager: "auto"
 
     - name: Install containerd.io
       shell: yum install -y https://download.docker.com/linux/centos/7/x86_64/stable/Packages/containerd.io-1.2.6-3.3.el7.x86_64.rpm
       become: yes
-      when: 'package_list.results | length != 0'
+      when: "'containerd.io' not in ansible_facts.packages"
 
     - name: Install Docker-ce
       yum:
