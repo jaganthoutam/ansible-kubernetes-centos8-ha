@@ -71,3 +71,11 @@ This system uses Docker container runtime
 
 
 `ansible-playbook create-cluster-playbook.yml -b --user=root`
+
+
+
+## kubernetes HA architecture
+Below is a sample Kubernetes cluster architecture after successfully building it using playbook. It is just a sample, so number of servers/node may vary according to your setup.
+
+![kubernetes HA architecture](kubernetes_architecture.png)
+
