@@ -10,13 +10,13 @@
   package:
     name: "{{ keepalived_dependencies }}"
     state: latest
-    update_cache: yes
+
 
 - name: Install keepalived on {{ ansible_distribution }}
   package:
     name: "{{ keepalived_packages }}"
     state: latest
-    update_cache: yes
+
 
 - name: Setup keepalived config file
   template:
