@@ -80,7 +80,7 @@ Edit `group_vars/all.yml` with Virtual IP and interface
 
 keepalived:
   enabled: true
-  interface: eth192              # Custom Interface*************************
+  interface: ens192              # Custom Interface*************************
   shared_ip: 192.168.0.156      # Virtual IP*************************
   vrid: 110                     # Virtual Router ID
   adv_interval: 1               # VRRP advert interval
