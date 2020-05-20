@@ -69,6 +69,27 @@ kubernetes_nodes
 
 This system uses Docker container runtime
 
+Edit `group_vars/all.yml` with Virtual IP and interface
+
+
+
+```
+.....
+.....
+# Keepalive
+
+keepalived:
+  enabled: true
+  interface: eth192              # Custom Interface*************************
+  shared_ip: 192.168.0.156      # Virtual IP*************************
+  vrid: 110                     # Virtual Router ID
+  adv_interval: 1               # VRRP advert interval
+  authtype: PASS                # 'PASS' (simple password) or 'AH' (IPSEC)
+  password: k8s@123    
+  ....
+  ...
+```
+
 
 `ansible-playbook create-cluster-playbook.yml -b --user=root`
 
