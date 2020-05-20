@@ -6,9 +6,13 @@ Firewalld for Master
 systemctl restart firewalld
 systemctl enable firewalld
 firewall-cmd --permanent --zone=public --add-port=80/tcp
+firewall-cmd --permanent --zone=public --add-port=53/tcp
 firewall-cmd --permanent --zone=public --add-port=443/tcp
+firewall-cmd --permanent --zone=public --add-port=10248/tcp
 firewall-cmd --permanent --zone=public --add-port=4443/tcp
 firewall-cmd --permanent --zone=public --add-port=6443/tcp
+firewall-cmd --permanent --zone=public --add-port=8080/tcp
+firewall-cmd --permanent --zone=public --add-port=9090/tcp
 firewall-cmd --permanent --zone=public --add-port=2379-2380/tcp
 firewall-cmd --permanent --zone=public --add-port=10250/tcp
 firewall-cmd --permanent --zone=public --add-port=10251/tcp
@@ -27,8 +31,12 @@ Firewalld for Worker
 systemctl restart firewalld
 systemctl enable firewalld
 firewall-cmd --permanent --zone=public --add-port=80/tcp
+firewall-cmd --permanent --zone=public --add-port=53/tcp
+firewall-cmd --permanent --zone=public --add-port=10248/tcp
 firewall-cmd --permanent --zone=public --add-port=443/tcp
 firewall-cmd --permanent --zone=public --add-port=4443/tcp
+firewall-cmd --permanent --zone=public --add-port=8080/tcp
+firewall-cmd --permanent --zone=public --add-port=9090/tcp
 firewall-cmd --zone=public --permanent --add-port=10250/tcp
 firewall-cmd --zone=public --permanent --add-port=10255/tcp
 firewall-cmd --zone=public --permanent --add-port=8472/udp
