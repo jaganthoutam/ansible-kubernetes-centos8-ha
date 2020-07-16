@@ -48,6 +48,12 @@ install_metrics_server: true
 
 #Kubernetes Hardening
 control_1: true
+control_2: false
+control_3: true
+control_4: true
 
 #kubeapiserver config
 kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml
+
+#kubelet config
+kubelet_config: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
