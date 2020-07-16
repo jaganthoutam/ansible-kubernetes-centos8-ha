@@ -45,3 +45,12 @@ control_plane_endpoint_port_ha: 8080
 
 #Metrics Server
 install_metrics_server: true
+
+#etcd data directory
+etcd_data_directory: etcd_data_directory
+
+#Kubernetes Hardening
+control_1: true
+
+#kubeapiserver config
+kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml

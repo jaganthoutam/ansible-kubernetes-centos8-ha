@@ -1,0 +1,85 @@
+- name: |
+         "1.1.9 Ensure that the Container Network Interface file permissions are set to 644 or more restrictive (Not Scored)"
+         "1.1.10 Ensure that the Container Network Interface file ownership is set to root:root (Not Scored)"
+- name: 1.1.11 Getting the etcd data directory
+  shell: "ps -ef | grep etcd | grep data-dir= |  sed 's|.*data-dir=||g' | awk '{print $1}'"
+  register: etcd_data_directory
+- local_action: copy content={{ etcd_data_directory.stdout }} dest={{ etcd_data_directory }}
+- name: |
+         "1.1.11 Ensure that the etcd data directory permissions are set to 700 or more restrictive (Scored)"
+         "1.1.12 Ensure that the etcd data directory ownership is set to etcd:etcd (Scored)"
+  file:
+    path: "{{ etcd_data_directory }}"
+    owner: etcd
+    group: etcd
+    mode: 0700
+    state: file
+
+- name: "Checker for kube-apiserver configuration"
+  shell: "cat {{ kubeapiserver_config }}"
+  register: presence
+
+- name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --anonymous-auth=false'
+
+- name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --kubelet-certificate-authority=/etc/kubernetes/pki/apiserver.crt'
+
+- name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
+  shell: "sed -i '/enable-admission-plugins/ s/$/,EventRateLimit/' {{  kubeapiserver_config }}"
+  when: presence.stdout is not search('EventRateLimit')
+
+- name: 1.2.12 Ensure that the admission control plugin AlwaysPullImages is set (Not Scored)
+  shell: "sed -i '/enable-admission-plugins=/ s/$/,AlwaysPullImages/' {{  kubeapiserver_config }}"
+  when: presence.stdout is not search('AlwaysPullImages')
+
+- name: 1.2.13 Ensure that the admission control plugin SecurityContextDeny is set if PodSecurityPolicy is not used (Not Scored)
+  shell: "sed -i '/enable-admission-plugins=/ s/$/,SecurityContextDeny/' {{  kubeapiserver_config }}"
+  when: presence.stdout is not search('SecurityContextDeny')
+
+- name: 1.2.16 Ensure that the admission control plugin PodSecurityPolicy is set (Scored)
+  shell: "sed -i '/enable-admission-plugins=/ s/$/,PodSecurityPolicy/' {{  kubeapiserver_config }}"
+  when: presence.stdout is not search('PodSecurityPolicy')
+
+- name: 1.2.21 Ensure that the --profiling argument is set to false (Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --profiling=false'
+
+- name: 1.2.22 Ensure that the --audit-log-path argument is set (Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --audit-log-path=/var/log/apiserver/audit.log'
+
+- name: 1.2.23 Ensure that the --audit-log-maxage argument is set to 30 or as appropriate (Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --audit-log-maxage=30'
+
+- name: 1.2.24 Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate (Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --audit-log-maxbackup=10'
+
+- name: 1.2.25 Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate (Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --audit-log-maxsize=100'
+
+- name: 1.2.35 Ensure that the API Server only makes use of Strong Cryptographic Ciphers (Not Scored)
+  lineinfile:
+    path: "{{  kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --tls-ciphersuites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384'
+
