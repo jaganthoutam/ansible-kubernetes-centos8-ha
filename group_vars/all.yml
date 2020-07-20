@@ -51,6 +51,7 @@ control_1: true
 control_2: false
 control_3: true
 control_4: true
+control_5: true
 
 #kubeapiserver config
 kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml
