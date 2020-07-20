@@ -11,13 +11,13 @@
    - section4.2
 
 - name: 4.3 Ensure unnecessary packages are not installed in the container (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Do not install unnecessary packages in the container"
   tags:
    - not_scored
    - section4.3
 
 - name: 4.4 Ensure images are scanned and rebuilt to include security patches (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Rebuild the images to include security patches"
   tags:
    - not_scored
    - section4.4
@@ -31,10 +31,36 @@
    - section4.5
    
 - name: 4.6 Ensure HEALTHCHECK instructions have been added to the container image (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  #debug: msg="This is configuration is set when containers are run"
+  docker_container:
+    name: nginx-proxy
+    image: nginx:1.13
+    state: started
+    healthcheck:
+      # Check if nginx server is healthy by curl'ing the server.
+      # If this fails or timeouts, the healthcheck fails.
+      test: ["CMD", "curl", "--fail", "http://nginx.host.com"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s     
   tags:
    - scored
    - section4.6
+   
+- name: Start container with healthstatus
+  docker_container:
+    name: nginx-proxy
+    image: nginx:1.13
+    state: started
+    healthcheck:
+      # Check if nginx server is healthy by curl'ing the server.
+      # If this fails or timeouts, the healthcheck fails.
+      test: ["CMD", "curl", "--fail", "http://nginx.host.com"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s   
 
 - name: 4.7 Ensure update instructions are not use alone in the Dockerfile (Not Scored)
   debug: msg="This is configuration is set when containers are run"
@@ -43,25 +69,25 @@
    - section4.7
 
 - name: 4.8 Ensure setuid and setgid permissions are removed in the images (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Use DevSec Linux Baseline in Container"
   tags:
    - not_scored
    - section4.8
 
-- name: 4.9 Ensure COPY is used instead of ADD in Dockerfile (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
-  tags:
-   - not_scored
-   - section4.9
+#- name: 4.9 Ensure COPY is used instead of ADD in Dockerfile (Not Scored)
+#  debug: msg="This is configuration is set when containers are run"
+#  tags:
+#   - not_scored
+#   - section4.9
 
 - name: 4.10 Ensure secrets are not stored in Dockerfiles (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Manually verify that you have not used secrets in images"
   tags:
    - not_scored
    - section4.10
 
 - name: 4.11 Ensure verified packages are only Installed (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Manually verify that you installed verified packages"
   tags:
    - not_scored
    - section4.11

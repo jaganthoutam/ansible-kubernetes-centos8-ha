@@ -14,7 +14,7 @@ section_5: true
 
 # section_6: false
 
-tursted_users:
+trusted_users:
   - vagrant
 
 config_file: /etc/docker/daemon.json
