@@ -1,3 +1,15 @@
 - name: Control Plane Components
   import_tasks: control_1.yml
   when: control_1 | bool
+
+- name: etcd
+  import_tasks: control_2.yml
+  when: control_2 | bool
+
+- name: Control Plane Configuration
+  import_tasks: control_3.yml
+  when: control_3 | bool
+
+- name: Control Plane Configuration
+  import_tasks: control_4.yml
+  when: control_4 | bool

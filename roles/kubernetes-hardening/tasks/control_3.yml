@@ -1,0 +1,27 @@
+- name: Create a policies folder
+  file:
+    path: "/etc/kubernetes/policies"
+    owner: "root"
+    group: "root"
+    state: directory
+
+- name: Copy audit policy yaml to directory
+  copy:
+    src: "../files/audit-policy.yaml"
+    dest: "/etc/kubernetes/policies/audit-policy.yaml" 
+    mode: 0644
+
+- name: |
+         "3.2.1 Ensure that a minimal audit policy is created (Scored)"
+         "3.2.2 Ensure that the audit policy covers key security concerns (Not Scored)"
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --audit-policy-file=/etc/kubernetes/policies/audit-policy.yaml'
+
+- name: Restart kubelet service
+  service:
+    name: kubelet
+    state: restarted  
+    enabled: yes
+  
