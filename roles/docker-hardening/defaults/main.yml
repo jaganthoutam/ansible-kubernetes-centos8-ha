@@ -12,10 +12,15 @@ section_4: true
 
 section_5: true
 
-# section_6: false
+section_6: true
 
 trusted_users:
-  - vagrant
+  - kong
+  - root
+  
+users_list:
+  - kong
+  - root  
 
 config_file: /etc/docker/daemon.json
 

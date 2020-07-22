@@ -1,23 +1,34 @@
 - name: 4.1 Ensure a user for the container has been created (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: 
+    msg: "Current lists of users: {{ item }}"
+  with_items: "{{ users_list }}"  
   tags:
    - scored
    - section4.1
 
 - name: 4.2 Ensure that containers use trusted base images (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Current lists of images"
+  docker_host_info:
+    images: yes
+  register: result  
   tags:
    - not_scored
    - section4.2
 
 - name: 4.3 Ensure unnecessary packages are not installed in the container (Not Scored)
-  debug: msg="Do not install unnecessary packages in the container"
+  debug: msg="Do not install unnecessary packages in the container. List of docker containers"
+  docker_host_info:
+    container: yes
+  register: result  
   tags:
    - not_scored
    - section4.3
 
 - name: 4.4 Ensure images are scanned and rebuilt to include security patches (Not Scored)
-  debug: msg="Rebuild the images to include security patches"
+  debug: msg="Rebuild the images to include security patches. Current lists of images"
+  docker_host_info:
+    images: yes
+  register: result  
   tags:
    - not_scored
    - section4.4
@@ -31,39 +42,13 @@
    - section4.5
    
 - name: 4.6 Ensure HEALTHCHECK instructions have been added to the container image (Scored)
-  #debug: msg="This is configuration is set when containers are run"
-  docker_container:
-    name: nginx-proxy
-    image: nginx:1.13
-    state: started
-    healthcheck:
-      # Check if nginx server is healthy by curl'ing the server.
-      # If this fails or timeouts, the healthcheck fails.
-      test: ["CMD", "curl", "--fail", "http://nginx.host.com"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s     
+  debug: msg="This is configuration is set in docker-compose-swarm.yaml and docker-compose.yml"
   tags:
    - scored
    - section4.6
    
-- name: Start container with healthstatus
-  docker_container:
-    name: nginx-proxy
-    image: nginx:1.13
-    state: started
-    healthcheck:
-      # Check if nginx server is healthy by curl'ing the server.
-      # If this fails or timeouts, the healthcheck fails.
-      test: ["CMD", "curl", "--fail", "http://nginx.host.com"]
-      interval: 1m30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s   
-
 - name: 4.7 Ensure update instructions are not use alone in the Dockerfile (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Use --no-cache flag during docker build process to avoid using cached layers"
   tags:
    - not_scored
    - section4.7

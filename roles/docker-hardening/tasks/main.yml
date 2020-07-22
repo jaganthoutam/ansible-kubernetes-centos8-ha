@@ -33,3 +33,10 @@
   tags:
       - container_runtime
       - section_5
+      
+- name: Include Docker Security Operations
+  import_tasks: section_6.yml
+  when: section_6 | bool
+  tags:
+      - docker_security_operations
+      - section_6

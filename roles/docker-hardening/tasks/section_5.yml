@@ -1,5 +1,5 @@
 - name: 5.1 Ensure AppArmor Profile is Enabled (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Start Docker with --security-opt apparmor=docker-default"
   tags:
    - scored
    - section5.1
@@ -45,7 +45,8 @@
 #   - section5.7
 
 - name: 5.8 Ensure only needed ports are open on the container (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Use the -p (lowercase) or --publish flag to explicitly define the ports that you need for a particular container instance."
+  shell: docker ps --quiet | xargs docker inspect --format '{{ .Id }}: Ports={{ .NetworkSettings.Ports }}'
   tags:
    - scored
    - section5.8
@@ -69,19 +70,27 @@
    - section5.11
 
 - name: 5.12 Ensure the container's root filesystem is mounted as read only (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Start Docker with --read-only option"
+  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Name }}: ReadonlyRootfs={{ .HostConfig.ReadonlyRootfs }}' | awk -F\/ '{print $2}' | awk -F\: '{print $1}'
+  register: docker_names 
+  docker_container:
+    name: "{{ item }}"
+    with_items: "{{ docker_names }}"
+    read_only: yes
   tags:
    - scored
    - section5.12
 
 - name: 5.13 Ensure incoming container traffic is binded to a specific host interface (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Need to replace wildcard IP address 0.0.0.0 with specific host interface."
+  shell: docker ps --quiet | xargs docker inspect --format '{{ .Id }}: Ports={{ .NetworkSettings.Ports }}'
   tags:
    - scored
    - section5.13
 
 - name: 5.14 Ensure 'on-failure' container restart policy is set to '5' (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Values should be RestartPolicyName=no and just RestartPolicyName= or RestartPolicyName=on-failure and MaximumRetryCount=<5"
+  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: RestartPolicyName={{ .HostConfig.RestartPolicy.Name }} MaximumRetryCount={{ .HostConfig.RestartPolicy.MaximumRetryCount }}'
   tags:
    - scored
    - section5.14
@@ -105,7 +114,8 @@
 #   - section5.17
 
 - name: 5.18 Ensure the default ulimit is overwritten at runtime, only if needed (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Should return Ulimits=<no value> for each container instance. Only override the default ulimit settings if needed."
+  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: Ulimits={{ .HostConfig.Ulimits }}'
   tags:
    - not_scored
    - section5.18
@@ -129,13 +139,15 @@
 #   - section5.21
 
 - name: 5.22 Ensure docker exec commands are not used with privileged option (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Do not use --privileged option in docker exec command."
+  shell: ausearch -k docker | grep exec | grep privileged
   tags:
    - scored
    - section5.22
 
 - name: 5.23 Ensure docker exec commands are not used with user option (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Do not use --user option in docker exec command."
+  shell: ausearch -k docker | grep exec | grep user
   tags:
    - scored
    - section5.23
@@ -147,7 +159,8 @@
 #   - section5.24
    
 - name: 5.25 Ensure the container is restricted from acquiring additional privileges (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  debug: msg="Security options currently configured for the containers should include no-new-privileges. See Control 2.18"
+  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: SecurityOpt={{ .HostConfig.SecurityOpt }}'
   tags:
    - scored
    - section5.25

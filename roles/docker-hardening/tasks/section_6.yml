@@ -1,16 +1,15 @@
-#- name: 6.1 Ensure image sprawl is avoided (Not Scored)
-#  #debug: msg="All images are instantiated"
-#  docker_prune:
-#    images: yes 
-#    images_filters:
-#      dangling: false 
-#  tags:
-#   - scored
-#   - section6.1
+- name: 6.1 Ensure image sprawl is avoided (Not Scored)
+  debug: msg="Perform regular security audits of your host system and containers. Current list of images."
+  docker_host_info:
+    images: yes
+  register: result
+  tags:
+   - scored
+   - section6.1
 
 - name: 6.2 Ensure container sprawl is avoided (Not Scored)
-  docker_prune:
-    containers: yes
+  debug: msg="Current list of containers with exited status."
+  shell: docker info --format '{{ .ContainersStopped }}'
   tags:
    - not_scored
    - section6.2
