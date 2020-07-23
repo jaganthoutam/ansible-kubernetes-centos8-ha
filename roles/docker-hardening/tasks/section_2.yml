@@ -183,12 +183,19 @@
 #   - scored
 #   - section2.12
 
+#disable-legacy-registry is already removed in version v19.03.0
 - name: "2.13 Ensure operations on legacy registry (v1) are Disabled (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: disable-legacy-registry
-    value: true
-  notify: Reload docker
+  shell: docker --version
+  ignore_errors: yes
+  register: running_version
+  
+- debug:
+    msg: "N/A disable-legacy-registry is already removed in version v19.03.0. Running version is {{ running_version.stdout }}"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: disable-legacy-registry
+#    value: true
+#  notify: Reload docker
   tags:
    - scored
    - section2.13
@@ -203,16 +210,16 @@
    - scored
    - section2.14
 
-#- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: userland-proxy
-#    value: false
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section2.15
-#
+- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
+  jsonpatch: 
+    file: "{{ config_file }}"
+    key: userland-proxy
+    value: false
+  notify: Reload docker
+  tags:
+   - scored
+   - section2.15
+
 #- name: "2.16 Ensure daemon-wide custom seccomp profile is applied, if needed (Not Scored)"
 #  jsonpatch: 
 #    file: "{{ config_file }}"
@@ -234,12 +241,26 @@
 #   - scored
 #   - section2.17
 
-- name: "2.18 Ensure containers are restricted from acquiring new privileges (Scored)"
-  jsonpatch: 
+- name: 2.18 Ensure containers are restricted from acquiring new privileges (Scored)
+  shell: grep no-new-privileges "{{ config_file }}" | wc -l 
+  ignore_errors: true
+  register: no_new_priv_cnt
+  
+- shell: grep no-new-privileges "{{ config_file }}" | awk '{print $2}' | sed 's|,||g' 
+  ignore_errors: true
+  register: no_new_privileges
+  when: no_new_priv_cnt.stdout != '0' 
+  
+- debug: 
+    msg: "Acquiring new privileges is alread restricted and already set to {{ no_new_privileges.stdout }}."  
+  when: no_new_priv_cnt.stdout != '0' and no_new_privileges.stdout == "true"
+  
+- jsonpatch: 
     file: "{{ config_file }}"
     key: no-new-privileges
     value: true
   notify: Reload docker
+  when: no_new_priv_cnt.stdout == '0' or no_new_privileges.stdout == "false"
   tags:
    - scored
    - section2.18

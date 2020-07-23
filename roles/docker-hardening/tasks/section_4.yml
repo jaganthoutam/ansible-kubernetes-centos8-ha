@@ -1,54 +1,97 @@
 - name: 4.1 Ensure a user for the container has been created (Scored)
-  debug: 
-    msg: "Current lists of users: {{ item }}"
-  with_items: "{{ users_list }}"  
+  shell: docker ps --quiet --all | xargs docker inspect --format \"\{\{ .Id \}\} User=\{\{ .Config.User \}\}\"
+  ignore_errors: true
+  register: result
+
+- debug: msg="Current lists of images and users:"
+
+- debug: 
+    msg: "{{ result.stdout }}"
   tags:
    - scored
    - section4.1
 
 - name: 4.2 Ensure that containers use trusted base images (Not Scored)
-  debug: msg="Current lists of images"
-  docker_host_info:
-    images: yes
-  register: result  
+  shell: docker images
+  ignore_errors: true
+  register: result
+  
+- debug: msg="Current lists of images"
+
+- debug: 
+    msg: "{{ result.stdout }}"
   tags:
    - not_scored
    - section4.2
 
 - name: 4.3 Ensure unnecessary packages are not installed in the container (Not Scored)
-  debug: msg="Do not install unnecessary packages in the container. List of docker containers"
-  docker_host_info:
-    container: yes
-  register: result  
+  shell: docker ps --quiet
+  ignore_errors: true  
+  register: result 
+  
+- debug: msg="Do not install unnecessary packages in the container. List of docker containers"
+
+- debug:
+    msg: "{{ result.stdout }}"
   tags:
    - not_scored
    - section4.3
 
 - name: 4.4 Ensure images are scanned and rebuilt to include security patches (Not Scored)
-  debug: msg="Rebuild the images to include security patches. Current lists of images"
-  docker_host_info:
-    images: yes
-  register: result  
+  shell: docker ps --quiet
+  ignore_errors: true  
+  register: result
+  
+- debug: msg="Rebuild the images to include security patches. Current lists of images"
+
+- debug:
+    msg: "{{ result.stdout }}" 
   tags:
    - not_scored
    - section4.4
 
+- stat:
+    path: /etc/environment
+  register: result_stat
+  
 - name: 4.5 Ensure Content trust for Docker is Enabled (Scored)
   lineinfile:
     path: /etc/environment
     line: DOCKER_CONTENT_TRUST=1
+  when: result_stat.stat.exists == true
+  
+- debug: msg="N/A /etc/environment does not exists."
+  when: result_stat.stat.exists == false  
   tags:
    - scored
    - section4.5
    
 - name: 4.6 Ensure HEALTHCHECK instructions have been added to the container image (Scored)
   debug: msg="This is configuration is set in docker-compose-swarm.yaml and docker-compose.yml"
+  
+- shell: docker images
+  ignore_errors: yes
+  register: audit_result
+  
+- debug: msg="Current list of docker images:"
+
+- debug: 
+    msg: "{{ audit_result.stdout }}"
   tags:
    - scored
    - section4.6
    
 - name: 4.7 Ensure update instructions are not use alone in the Dockerfile (Not Scored)
   debug: msg="Use --no-cache flag during docker build process to avoid using cached layers"
+  
+- shell: docker images
+  ignore_errors: yes
+  register: audit_result
+  
+- debug: msg="Current list of docker images:"
+
+- debug: 
+    msg: "{{ audit_result.stdout }}"  
   tags:
    - not_scored
    - section4.7
@@ -67,12 +110,30 @@
 
 - name: 4.10 Ensure secrets are not stored in Dockerfiles (Not Scored)
   debug: msg="Manually verify that you have not used secrets in images"
+  
+- shell: docker images
+  ignore_errors: yes
+  register: audit_result
+  
+- debug: msg="Current list of docker images:"
+
+- debug: 
+    msg: "{{ audit_result.stdout }}"  
   tags:
    - not_scored
    - section4.10
 
 - name: 4.11 Ensure verified packages are only Installed (Not Scored)
   debug: msg="Manually verify that you installed verified packages"
+  
+- shell: docker images
+  ignore_errors: yes
+  register: audit_result
+  
+- debug: msg="Current list of docker images:"
+
+- debug: 
+    msg: "{{ audit_result.stdout }}"  
   tags:
    - not_scored
    - section4.11
