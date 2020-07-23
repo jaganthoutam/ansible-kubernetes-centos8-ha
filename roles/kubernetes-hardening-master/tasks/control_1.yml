@@ -169,7 +169,7 @@
   when: presence_controller.stdout is not search('feature-gates')
 
 - name: "Checker for kube-scheduler configuration"
-  shell: "cat {{ kube_controller_manager_config }}"
+  shell: "cat {{ kube_scheduler_config }}"
   register: presence_scheduler
 
 - name: 1.4.1 Ensure that the --profiling argument is set to false (Scored)
