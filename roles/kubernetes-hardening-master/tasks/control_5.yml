@@ -85,9 +85,8 @@
   shell: "kubectl create -f /etc/kubernetes/policies/service-account.yaml"
 
 - name: 5.1.6 Ensure that Service Account Tokens are only mounted where necessary (Not Scored)
-  debug: msg="Modify the definition of pods and service accounts which do not need to mount service tokens to disable it.
-              Pods mounted without service account tokens will not be able to communicate with the API server, except where the resource is available to unauthenticated principals."
-  shell: "kubectl get sa --all-namespaces"
+  debug: msg="Modify the definition of pods and service accounts which do not need to mount service tokens to disable it. Pods mounted without service account tokens will not be able to communicate with the API server, except where the resource is available to unauthenticated principals."
+- shell: "kubectl get sa --all-namespaces"
 
 - name: Copy pod policies yaml to directory
   copy:
