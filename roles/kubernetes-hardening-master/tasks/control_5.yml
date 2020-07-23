@@ -119,7 +119,7 @@
   debug: msg="If possible, rewrite application code to read secrets from mounted secret files, rather than from environment variables."
 
 - name: 5.4.2 Consider external secret storage (Not Scored)
-  debug: msg="Refer to the secrets management options offered by your cloud provider or a third-party secrets management solution.
+  debug: msg="Refer to the secrets management options offered by your cloud provider or a third-party secrets management solution."
 
 - name: 5.5.1 Configure Image Provenance using ImagePolicyWebhook admission controller (Not Scored)
   debug: msg="Review the pod definitions in your cluster and verify that image provenance is configured as appropriate."
