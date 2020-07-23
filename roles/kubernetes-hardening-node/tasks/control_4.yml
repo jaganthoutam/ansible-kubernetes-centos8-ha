@@ -57,19 +57,19 @@
 - name: Reset kubelet.conf
   lineinfile:
     dest: "{{ kubelet_config }}"
-    regexp: "Environment="KUBELET_SYSTEM_PODS_ARGS"
+    regexp: "Environment=\"KUBELET_SYSTEM_PODS_ARGS\""
     state: absent
 
 - name: Reset kubelet.conf
   lineinfile:
     dest: "{{ kubelet_config }}"
-    regexp: "Environment="KUBELET_AUTHZ_ARGS"
+    regexp: "Environment=\"KUBELET_AUTHZ_ARGS\""
     state: absent
 
 - name: Reset kubelet.conf
   lineinfile:
     dest: "{{ kubelet_config }}"
-    regexp: "Environment="KUBELET_CERTIFICATE_ARGS"
+    regexp: "Environment=\"KUBELET_CERTIFICATE_ARGS\""
     state: absent
 
 - name: |
