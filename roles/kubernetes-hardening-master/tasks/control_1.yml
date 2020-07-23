@@ -31,18 +31,21 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --anonymous-auth=false'
+  when: presence.stdout is not search('anonymous-auth')
 
 - name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --kubelet-certificate-authority=/etc/kubernetes/pki/ca.crt'
+  when: presence.stdout is not search('kubelet-certificate-authority')
 
-- name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
+- name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --enable-admission-plugins='
+  when: presence.stdout is not search('enable-admission-plugins')
 
 - name: Copy event config yaml to directory
   copy:
@@ -61,6 +64,7 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --admission-control-config-file=/etc/kubernetes/pki/admission-configuration.yaml'
+  when: presence.stdout is not search('admission-control-config-file')
 
 - name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
   shell: "sed -i '/enable-admission-plugins/ s/$/EventRateLimit/' {{ kubeapiserver_config }}"
@@ -83,30 +87,35 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --profiling=false'
+  when: presence.stdout is not search('profiling') 
 
 - name: 1.2.22 Ensure that the --audit-log-path argument is set (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-path=/var/log/apiserver/audit.log'
+  when: presence.stdout is not search('audit-log-path') 
 
 - name: 1.2.23 Ensure that the --audit-log-maxage argument is set to 30 or as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-maxage=30'
+  when: presence.stdout is not search('audit-log-maxage') 
 
 - name: 1.2.24 Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-maxbackup=10'
+  when: presence.stdout is not search('audit-log-maxbackup') 
 
 - name: 1.2.25 Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-maxsize=100'
+  when: presence.stdout is not search('audit-log-maxsize') 
 
 - name: 1.2.34 Creating random key
   shell: "head -c 32 /dev/urandom | base64"
@@ -125,10 +134,12 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --encryption-provider-config=/etc/kubernetes/pki/EncryptionConfig.yaml'
+  when: presence.stdout is not search('encryption-provider-config') 
 
 - name: 1.2.35 Ensure that the API Server only makes use of Strong Cryptographic Ciphers (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256'
+  when: presence.stdout is not search('tls-cipher-suites') 
 
