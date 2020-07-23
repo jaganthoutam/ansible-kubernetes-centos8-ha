@@ -1,6 +1,7 @@
 - name: 5.1.1 Ensure that the cluster-admin role is only used where required (Not Scored)
   debug: msg="Review each principal listed and ensure that cluster-admin privilege is required for it."
-  shell: "kubectl get clusterrolebindings -o=custom-columns=NAME:.metadata.name,ROLE:.roleRef.name,SUBJECT:.subjects[*].name"
+
+- shell: "kubectl get clusterrolebindings -o=custom-columns=NAME:.metadata.name,ROLE:.roleRef.name,SUBJECT:.subjects[*].name"
   register: output_5_1_1
 
 - name: Display - 5.1.1 Ensure that the cluster-admin role is only used where required (Not Scored)
@@ -8,7 +9,8 @@
 
 - name: 5.1.2 Minimize access to secrets (Not Scored) - Role
   debug: msg="Where possible, remove get, list and watch access to secret objects in the cluster."
-  shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
+
+- shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
   register: output_5_1_2_role
 
 - debug: msg="No role has an access to secrets"
@@ -20,7 +22,8 @@
 
 - name: 5.1.2 Minimize access to secrets (Not Scored) - ClusterRole
   debug: msg="Where possible, remove get, list and watch access to secret objects in the cluster."
-  shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
+
+- shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
   register: output_5_1_2_clusterrole
 
 - debug: msg="No clusterrole has an access to secrets"
@@ -32,7 +35,8 @@
 
 - name: 5.1.3 Minimize wildcard use in Roles and ClusterRoles (Not Scored) - Role
   debug: msg="Where possible replace any use of wildcards in clusterroles and roles with specific objects or actions."
-  shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep '*''"
+
+- shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep '*''"
   register: output_5_1_3_role
 
 - debug: msg="No role has wildcard"
@@ -44,7 +48,8 @@
 
 - name: 5.1.3 Minimize wildcard use in Roles and ClusterRoles (Not Scored) - ClusterRole
   debug: msg="Where possible replace any use of wildcards in clusterroles and roles with specific objects or actions."
-  shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep '*'"
+
+- shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep '*'"
   register: output_5_1_3_clusterrole
 
 - debug: msg="No clusterrole has wildcard"
@@ -56,7 +61,8 @@
 
 - name: 5.1.4 Minimize access to create pods (Not Scored)
   debug: msg="Where possible, remove create access to pod objects in the cluster."
-  shell: "kubectl get clusterroles -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep pods | grep create"
+
+- shell: "kubectl get clusterroles -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep pods | grep create"
   register: output_5_1_4_clusterrole
 
 - debug: msg="No clusterrole has an access to create pods"
