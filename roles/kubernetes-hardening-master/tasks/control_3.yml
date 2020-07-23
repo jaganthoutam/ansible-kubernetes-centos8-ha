@@ -1,0 +1,48 @@
+- name: Create a policies folder
+  file:
+    path: "/etc/kubernetes/policies"
+    owner: "root"
+    group: "root"
+    state: directory
+
+- name: Copy audit policy yaml to directory
+  copy:
+    src: "../files/audit-policy.yaml"
+    dest: "/etc/kubernetes/policies/audit-policy.yaml" 
+    mode: 0644
+
+- name: "Checker for policies volumes"
+  shell: "cat {{ kubeapiserver_config }}"
+  register: presence_policies
+
+- name: Add volumes of policies
+  lineinfile:
+    dest: "{{ kubeapiserver_config }}"
+    insertafter: '  volumes:'
+    line: "{{ item.line }}"
+  with_items:
+    - { line: '    name: policies' }
+    - { line: '      type: DirectoryOrCreate' }
+    - { line: '      path: /etc/kubernetes/policies' }
+    - { line: '  - hostPath:' }
+  when: presence_policies.stdout is not search('/etc/kubernetes/policies')
+
+- name: Add volumes mounts of policies
+  lineinfile:
+    dest: "{{ kubeapiserver_config }}"
+    insertafter: '    volumeMounts:'
+    line: "{{ item.line }}"
+  with_items:
+    - { line: '      readOnly: true' }
+    - { line: '      name: policies' }
+    - { line: '    - mountPath: /etc/kubernetes/policies' }
+  when: presence_policies.stdout is not search('/etc/kubernetes/policies')
+
+- name: |
+         "3.2.1 Ensure that a minimal audit policy is created (Scored)"
+         "3.2.2 Ensure that the audit policy covers key security concerns (Not Scored)"
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --audit-policy-file=/etc/kubernetes/policies/audit-policy.yaml'
+  

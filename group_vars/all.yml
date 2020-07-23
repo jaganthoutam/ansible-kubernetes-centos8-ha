@@ -56,5 +56,10 @@ control_5: true
 #kubeapiserver config
 kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml
 
+#etcd data directory
+etcd_data_directory: /var/lib/etcd
+
 #kubelet config
-kubelet_config: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+kubelet_config: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+key_file: key_tls
+crt_file: crt_tls

@@ -1,19 +1,15 @@
-- name: |
-         "1.1.9 Ensure that the Container Network Interface file permissions are set to 644 or more restrictive (Not Scored)"
-         "1.1.10 Ensure that the Container Network Interface file ownership is set to root:root (Not Scored)"
-- name: 1.1.11 Getting the etcd data directory
-  shell: "ps -ef | grep etcd | grep data-dir= |  sed 's|.*data-dir=||g' | awk '{print $1}'"
-  register: etcd_data_directory
-
+#- name: |
+#         "1.1.9 Ensure that the Container Network Interface file permissions are set to 644 or more restrictive (Not Scored)"
+#         "1.1.10 Ensure that the Container Network Interface file ownership is set to root:root (Not Scored)"
 - name: |
          "1.1.11 Ensure that the etcd data directory permissions are set to 700 or more restrictive (Scored)"
          "1.1.12 Ensure that the etcd data directory ownership is set to etcd:etcd (Scored)"
   file:
-    path: "{{ etcd_data_directory.stdout }}"
+    path: "{{ etcd_data_directory }}"
     owner: etcd
     group: etcd
     mode: 0700
-    state: file
+    state: directory
 
 - name: "Checker for kube-apiserver configuration"
   shell: "cat {{ kubeapiserver_config }}"
@@ -29,7 +25,31 @@
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
-    line: '    - --kubelet-certificate-authority=/etc/kubernetes/pki/apiserver.crt'
+    line: '    - --kubelet-certificate-authority=/etc/kubernetes/pki/ca.crt'
+
+- name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --enable-admission-plugins='
+
+- name: Copy event config yaml to directory
+  copy:
+    src: "../files/eventconfig.yaml"
+    dest: "/etc/kubernetes/pki/eventconfig.yaml" 
+    mode: 0644
+
+- name: Copy event config yaml to directory
+  copy:
+    src: "../files/admission-configuration.yaml"
+    dest: "/etc/kubernetes/pki/admission-configuration.yaml" 
+    mode: 0644
+
+- name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --admission-control-config-file=/etc/kubernetes/pki/admission-configuration.yaml'
 
 - name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
   shell: "sed -i '/enable-admission-plugins/ s/$/,EventRateLimit/' {{ kubeapiserver_config }}"
@@ -84,7 +104,7 @@
 - name: 1.2.34 Ensure that encryption providers are appropriately configured (Not Scored)
   template:
     src: "../templates/secrets.yaml.j2"
-    dest: "/etc/kubernetes/pki/secrets.yaml"
+    dest: "/etc/kubernetes/pki/EncryptionConfig.yaml"
     owner: "root"
     group: "root"
     mode: 0644
@@ -93,11 +113,11 @@
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
-    line: '    - --encryption-provider-config=/etc/kubernetes/pki/secrets.yaml'
+    line: '    - --encryption-provider-config=/etc/kubernetes/pki/EncryptionConfig.yaml'
 
 - name: 1.2.35 Ensure that the API Server only makes use of Strong Cryptographic Ciphers (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
-    line: '    - --tls-ciphersuites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384'
+    line: '    - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256'
 

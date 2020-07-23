@@ -1,0 +1,13 @@
+- name: Copy crt file from master to node
+  command: "cat /etc/kubernetes/pki/apiserver.crt"
+  register: crt_init
+ 
+- name: Storing crt for node
+  local_action: copy content={{ crt_init.stdout }} dest={{ crt_file }}
+
+- name: Copy key file from master to node
+  command: "cat /etc/kubernetes/pki/apiserver.key"
+  register: key_init
+ 
+- name: Storing key for node
+  local_action: copy content={{ key_init.stdout }} dest={{ key_file }}

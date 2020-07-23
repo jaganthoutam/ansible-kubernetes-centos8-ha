@@ -10,10 +10,6 @@
   import_tasks: control_3.yml
   when: control_3 | bool
 
-- name: Worker Nodes
-  import_tasks: control_4.yml
-  when: control_4 | bool
-
 - name: Policies
   import_tasks: control_5.yml
   when: control_5 | bool

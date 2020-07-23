@@ -124,6 +124,9 @@
 
 - name: 5.7.2 Ensure that the seccomp profile is set to docker/default in your pod definitions (Not Scored)
   debug: msg="Enable docker/default seccomp profile in your pod definitions."
+#    - --feature-gates=AllAlpha=true
+#- --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
+#- --service-account-issuer=kubernetes.default.svc
 
 - name: 5.7.3 Apply Security Context to Your Pods and Containers (Not Scored)
   debug: msg="Apply Security Context to Your Pods and Containers"
