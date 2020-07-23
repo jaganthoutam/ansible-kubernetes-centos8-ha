@@ -63,7 +63,7 @@
     line: '    - --admission-control-config-file=/etc/kubernetes/pki/admission-configuration.yaml'
 
 - name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
-  shell: "sed -i '/enable-admission-plugins/ s/$/,EventRateLimit/' {{ kubeapiserver_config }}"
+  shell: "sed -i '/enable-admission-plugins/ s/$/EventRateLimit/' {{ kubeapiserver_config }}"
   when: presence.stdout is not search('EventRateLimit')
 
 - name: 1.2.12 Ensure that the admission control plugin AlwaysPullImages is set (Not Scored)
