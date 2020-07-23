@@ -1,6 +1,17 @@
 #- name: |
 #         "1.1.9 Ensure that the Container Network Interface file permissions are set to 644 or more restrictive (Not Scored)"
 #         "1.1.10 Ensure that the Container Network Interface file ownership is set to root:root (Not Scored)"
+- name: Add group "etcd" to remote server
+  group:
+    name: etcd
+    state: present
+
+- name: Adding user to etcd group
+  user:
+    name: etcd
+    groups: etcd
+    append: yes
+
 - name: |
          "1.1.11 Ensure that the etcd data directory permissions are set to 700 or more restrictive (Scored)"
          "1.1.12 Ensure that the etcd data directory ownership is set to etcd:etcd (Scored)"
