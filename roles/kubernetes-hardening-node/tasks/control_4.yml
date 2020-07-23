@@ -57,19 +57,19 @@
 - name: Reset kubelet.conf
   lineinfile:
     dest: "{{ kubelet_config }}"
-    regexp: "Environment=\"KUBELET_SYSTEM_PODS_ARGS\""
+    regexp: "Environment=\"KUBELET_SYSTEM_PODS_ARGS"
     state: absent
 
 - name: Reset kubelet.conf
   lineinfile:
     dest: "{{ kubelet_config }}"
-    regexp: "Environment=\"KUBELET_AUTHZ_ARGS\""
+    regexp: "Environment=\"KUBELET_AUTHZ_ARGS"
     state: absent
 
 - name: Reset kubelet.conf
   lineinfile:
     dest: "{{ kubelet_config }}"
-    regexp: "Environment=\"KUBELET_CERTIFICATE_ARGS\""
+    regexp: "Environment=\"KUBELET_CERTIFICATE_ARGS"
     state: absent
 
 - name: |
@@ -93,13 +93,13 @@
     - { line: 'Environment="KUBELET_CERTIFICATE_ARGS=--feature-gates=RotateKubeletServerCertificate=true --rotate-certificates=true --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256  --tls-cert-file=/etc/kubernetes/pki/apiserver.crt --tls-private-key-file=/etc/kubernetes/pki/apiserver.key"' }
 
 - shell: "sed -i '${s/$/ $KUBELET_SYSTEM_PODS_ARGS/}' {{ kubelet_config }}"
-  when: presence_kubelet.stdout is not search('KUBELET_SYSTEM_PODS_ARGS')
+  when: presence_kubelet.stdout is not search('$KUBELET_SYSTEM_PODS_ARGS')
 
 - shell: "sed -i '${s/$/ $KUBELET_AUTHZ_ARGS/}' {{ kubelet_config }}"
-  when: presence_kubelet.stdout is not search('KUBELET_AUTHZ_ARGS')
+  when: presence_kubelet.stdout is not search('$KUBELET_AUTHZ_ARGS')
 
 - shell: "sed -i '${s/$/ $KUBELET_CERTIFICATE_ARGS/}' {{ kubelet_config }}"
-  when: presence_kubelet.stdout is not search('KUBELET_CERTIFICATE_ARGS')
+  when: presence_kubelet.stdout is not search('$UBELET_CERTIFICATE_ARGS')
 
 - name: Daemon Reload
   systemd: daemon_reload=yes
