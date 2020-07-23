@@ -51,6 +51,9 @@
     dest: "{{ key_file }}"
     mode: '0644'
 
+- name: Copy crt file
+  shell: "cat {{ crt_file }} > /etc/kubernetes/pki/apiserver.key"
+
 - name: Reset kubelet.conf
   lineinfile:
     path: "{{ kubelet_config }}"
