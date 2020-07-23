@@ -65,7 +65,7 @@ key_file: key_tls
 crt_file: crt_tls
 
 #kube-controller-manager config
-kube_controller_manager_config: /etc/kubernetes/manifests/kubecontroller-manager.yaml
+kube_controller_manager_config: /etc/kubernetes/manifests/kube-controller-manager.yaml
 
 #kube-scheduler config
 kube_scheduler_config: /etc/kubernetes/manifests/kube-scheduler.yaml
