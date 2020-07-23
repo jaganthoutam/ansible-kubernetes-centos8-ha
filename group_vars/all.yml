@@ -63,3 +63,9 @@ etcd_data_directory: /var/lib/etcd
 kubelet_config: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 key_file: key_tls
 crt_file: crt_tls
+
+#kube-controller-manager config
+kube_controller_manager_config: /etc/kubernetes/manifests/kubecontroller-manager.yaml
+
+#kube-scheduler config
+kube_scheduler_config: /etc/kubernetes/manifests/kube-scheduler.yaml

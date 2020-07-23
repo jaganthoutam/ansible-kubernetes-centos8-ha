@@ -24,28 +24,28 @@
 
 - name: "Checker for kube-apiserver configuration"
   shell: "cat {{ kubeapiserver_config }}"
-  register: presence
+  register: presence_apiserver
 
 - name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --anonymous-auth=false'
-  when: presence.stdout is not search('anonymous-auth')
+  when: presence_apiserver.stdout is not search('anonymous-auth')
 
 - name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --kubelet-certificate-authority=/etc/kubernetes/pki/ca.crt'
-  when: presence.stdout is not search('kubelet-certificate-authority')
+  when: presence_apiserver.stdout is not search('kubelet-certificate-authority')
 
 - name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --enable-admission-plugins='
-  when: presence.stdout is not search('enable-admission-plugins')
+  when: presence_apiserver.stdout is not search('enable-admission-plugins')
 
 - name: Copy event config yaml to directory
   copy:
@@ -64,58 +64,58 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --admission-control-config-file=/etc/kubernetes/pki/admission-configuration.yaml'
-  when: presence.stdout is not search('admission-control-config-file')
+  when: presence_apiserver.stdout is not search('admission-control-config-file')
 
 - name: 1.2.10 Ensure that the admission control plugin EventRateLimit is set (Not Scored)
   shell: "sed -i '/enable-admission-plugins/ s/$/,EventRateLimit/' {{ kubeapiserver_config }}"
-  when: presence.stdout is not search('EventRateLimit')
+  when: presence_apiserver.stdout is not search('EventRateLimit')
 
 - name: 1.2.12 Ensure that the admission control plugin AlwaysPullImages is set (Not Scored)
   shell: "sed -i '/enable-admission-plugins=/ s/$/,AlwaysPullImages/' {{ kubeapiserver_config }}"
-  when: presence.stdout is not search('AlwaysPullImages')
+  when: presence_apiserver.stdout is not search('AlwaysPullImages')
 
 - name: 1.2.13 Ensure that the admission control plugin SecurityContextDeny is set if PodSecurityPolicy is not used (Not Scored)
   shell: "sed -i '/enable-admission-plugins=/ s/$/,SecurityContextDeny/' {{ kubeapiserver_config }}"
-  when: presence.stdout is not search('SecurityContextDeny')
+  when: presence_apiserver.stdout is not search('SecurityContextDeny')
 
 - name: 1.2.16 Ensure that the admission control plugin PodSecurityPolicy is set (Scored)
   shell: "sed -i '/enable-admission-plugins=/ s/$/,PodSecurityPolicy/' {{ kubeapiserver_config }}"
-  when: presence.stdout is not search('PodSecurityPolicy')
+  when: presence_apiserver.stdout is not search('PodSecurityPolicy')
 
 - name: 1.2.21 Ensure that the --profiling argument is set to false (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --profiling=false'
-  when: presence.stdout is not search('profiling') 
+  when: presence_apiserver.stdout is not search('profiling') 
 
 - name: 1.2.22 Ensure that the --audit-log-path argument is set (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-path=/var/log/apiserver/audit.log'
-  when: presence.stdout is not search('audit-log-path') 
+  when: presence_apiserver.stdout is not search('audit-log-path') 
 
 - name: 1.2.23 Ensure that the --audit-log-maxage argument is set to 30 or as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-maxage=30'
-  when: presence.stdout is not search('audit-log-maxage') 
+  when: presence_apiserver.stdout is not search('audit-log-maxage') 
 
 - name: 1.2.24 Ensure that the --audit-log-maxbackup argument is set to 10 or as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-maxbackup=10'
-  when: presence.stdout is not search('audit-log-maxbackup') 
+  when: presence_apiserver.stdout is not search('audit-log-maxbackup') 
 
 - name: 1.2.25 Ensure that the --audit-log-maxsize argument is set to 100 or as appropriate (Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-log-maxsize=100'
-  when: presence.stdout is not search('audit-log-maxsize') 
+  when: presence_apiserver.stdout is not search('audit-log-maxsize') 
 
 - name: 1.2.34 Creating random key
   shell: "head -c 32 /dev/urandom | base64"
@@ -134,12 +134,47 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --encryption-provider-config=/etc/kubernetes/pki/EncryptionConfig.yaml'
-  when: presence.stdout is not search('encryption-provider-config') 
+  when: presence_apiserver.stdout is not search('encryption-provider-config') 
 
 - name: 1.2.35 Ensure that the API Server only makes use of Strong Cryptographic Ciphers (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256'
-  when: presence.stdout is not search('tls-cipher-suites') 
+  when: presence_apiserver.stdout is not search('tls-cipher-suites') 
 
+- name: "Checker for kube-controller configuration"
+  shell: "cat {{ kube_controller_manager_config }}"
+  register: presence_controller
+
+- name: 1.3.1 Ensure that the --terminated-pod-gc-threshold argument is set as appropriate (Not Scored)
+  lineinfile:
+    path: "{{ kube_controller_manager_config }}"
+    insertafter: '- kube-controller-manager'
+    line: '    - --terminated-pod-gc-threshold=10'
+  when: presence_controller.stdout is not search('terminated-pod-gc-threshold')
+
+- name: 1.3.2 Ensure that the --profiling argument is set to false (Scored)
+  lineinfile:
+    path: "{{ kube_controller_manager_config }}"
+    insertafter: '- kube-controller-manager'
+    line: '    - --profiling=false'
+  when: presence_controller.stdout is not search('profiling') 
+
+- name: 1.3.6 Ensure that the RotateKubeletServerCertificate argument is set to true (Scored)
+  lineinfile:
+    path: "{{ kube_controller_manager_config }}"
+    insertafter: '- kube-controller-manager'
+    line: '    - --feature-gates=RotateKubeletServerCertificate=true'
+  when: presence_controller.stdout is not search('feature-gates')
+
+- name: "Checker for kube-scheduler configuration"
+  shell: "cat {{ kube_controller_manager_config }}"
+  register: presence_scheduler
+
+- name: 1.4.1 Ensure that the --profiling argument is set to false (Scored)
+  lineinfile:
+    path: "{{ kube_scheduler_config }}"
+    insertafter: '- kube-scheduler'
+    line: '    - --profiling=false'
+  when: presence_scheduler.stdout is not search('profiling') 
