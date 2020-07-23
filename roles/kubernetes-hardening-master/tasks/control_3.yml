@@ -13,7 +13,7 @@
 
 - name: "Checker for policies volumes"
   shell: "cat {{ kubeapiserver_config }}"
-  register: presence_policies
+  register: presence_apiserver
 
 - name: Add volumes of policies
   lineinfile:
@@ -25,7 +25,7 @@
     - { line: '      type: DirectoryOrCreate' }
     - { line: '      path: /etc/kubernetes/policies' }
     - { line: '  - hostPath:' }
-  when: presence_policies.stdout is not search('/etc/kubernetes/policies')
+  when: presence_apiserver.stdout is not search('/etc/kubernetes/policies')
 
 - name: Add volumes mounts of policies
   lineinfile:
@@ -36,7 +36,7 @@
     - { line: '      readOnly: true' }
     - { line: '      name: policies' }
     - { line: '    - mountPath: /etc/kubernetes/policies' }
-  when: presence_policies.stdout is not search('/etc/kubernetes/policies')
+  when: presence_apiserver.stdout is not search('/etc/kubernetes/policies')
 
 - name: |
          "3.2.1 Ensure that a minimal audit policy is created (Scored)"
@@ -45,4 +45,5 @@
     path: "{{ kubeapiserver_config }}"
     insertafter: '- kube-apiserver'
     line: '    - --audit-policy-file=/etc/kubernetes/policies/audit-policy.yaml'
+  when: presence_apiserver.stdout is not search('audit-policy-file')
   

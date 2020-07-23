@@ -51,8 +51,23 @@
     dest: "{{ key_file }}"
     mode: '0644'
 
-- name: Copy key file
-  shell: "cat {{ key_file }} > /etc/kubernetes/pki/apiserver.key"
+- name: Reset kubelet.conf
+  lineinfile:
+    path: "{{ kubelet_config }}"
+    line: "KUBELET_SYSTEM_PODS_ARGS"
+    state: absent
+
+- name: Reset kubelet.conf
+  lineinfile:
+    path: "{{ kubelet_config }}"
+    line: "KUBELET_AUTHZ_ARGS"
+    state: absent
+
+- name: Reset kubelet.conf
+  lineinfile:
+    path: "{{ kubelet_config }}"
+    line: "KUBELET_CERTIFICATE_ARGS"
+    state: absent
 
 - name: |
          "4.2.1 Ensure that the anonymous-auth argument is set to false (Scored)"
@@ -73,15 +88,6 @@
     - { line: 'Environment="KUBELET_SYSTEM_PODS_ARGS=--anonymous-auth=false --read-only-port=0 --protect-kernel-defaults=true --make-iptables-util-chains=true --event-qps=0"' }
     - { line: 'Environment="KUBELET_AUTHZ_ARGS=--client-ca-file=/etc/kubernetes/pki/ca.crt"' }
     - { line: 'Environment="KUBELET_CERTIFICATE_ARGS=--feature-gates=RotateKubeletServerCertificate=true --rotate-certificates=true --tls-cipher-suites=TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_256_GCM_SHA384,TLS_RSA_WITH_AES_128_GCM_SHA256  --tls-cert-file=/etc/kubernetes/pki/apiserver.crt --tls-private-key-file=/etc/kubernetes/pki/apiserver.key"' }
-
-- shell: "sed -i '${s/$/ $KUBELET_SYSTEM_PODS_ARGS/}' {{ kubelet_config }}"
-  when: presence_kubelet.stdout is not search('KUBELET_SYSTEM_PODS_ARGS')
-
-- shell: "sed -i '${s/$/ $KUBELET_AUTHZ_ARGS/}' {{ kubelet_config }}"
-  when: presence_kubelet.stdout is not search('KUBELET_AUTHZ_ARGS')
-
-- shell: "sed -i '${s/$/ $KUBELET_CERTIFICATE_ARGS/}' {{ kubelet_config }}"
-  when: presence_kubelet.stdout is not search('KUBELET_CERTIFICATE_ARGS')
 
 - name: Daemon Reload
   systemd: daemon_reload=yes

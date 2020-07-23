@@ -50,6 +50,7 @@ install_metrics_server: true
 control_1: false
 control_2: false
 control_3: false
+copy_files: false
 control_4: false
 control_5: false
 

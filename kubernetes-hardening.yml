@@ -4,8 +4,8 @@
   roles:
     - { role: kubernetes-hardening-master, tags: ["kubernetes-hardening-master"] }
 
-# - name: kubernetes-hardening-master
-#   hosts: kubernetes_node
-#   become: yes
-#   roles:
-#     - { role: kubernetes-hardening-node, tags: ["kubernetes-hardening-node"] }
+- name: kubernetes-hardening-master
+  hosts: kubernetes_node
+  become: yes
+  roles:
+    - { role: kubernetes-hardening-node, tags: ["kubernetes-hardening-node"] }
