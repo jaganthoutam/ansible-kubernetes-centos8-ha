@@ -70,3 +70,8 @@ kube_controller_manager_config: /etc/kubernetes/manifests/kube-controller-manage
 
 #kube-scheduler config
 kube_scheduler_config: /etc/kubernetes/manifests/kube-scheduler.yaml
+
+#kube-proxy key and crt
+ca_file: ca_pem
+kubeproxy_file: kube_proxy_pem
+kubeproxykey_file: kube_proxy_key_pem

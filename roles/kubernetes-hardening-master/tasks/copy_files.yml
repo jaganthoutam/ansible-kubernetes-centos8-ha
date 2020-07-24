@@ -11,3 +11,99 @@
  
 - name: Storing key for node
   local_action: copy content={{ key_init.stdout }} dest={{ key_file }}
+
+- name: Install golang-cfssl
+  apt:
+    name: golang-cfssl
+    state: present
+
+- name: Copy kube-proxy-csr to directory
+  copy:
+    src: "../files/kube-proxy-csr.json"
+    dest: "/etc/kubernetes/pki/kube-proxy-csr.json" 
+    mode: 0644
+
+- name: Copy ca-csr to directory
+  copy:
+    src: "../files/ca-csr.json"
+    dest: "/etc/kubernetes/pki/ca-csr.json" 
+    mode: 0644
+
+- name: Copy ca-config to directory
+  copy:
+    src: "../files/ca-config.json"
+    dest: "/etc/kubernetes/pki/ca-config.json" 
+    mode: 0644
+
+- name: Generate a CA certificate and private key
+  shell: "cfssl gencert -initca ca-csr.json | cfssljson -bare ca"
+  args:
+    chdir: "/etc/kubernetes/pki"
+
+- name: Generate the kube-proxy client certificate and private key
+  shell: "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-proxy-csr.json | cfssljson -bare kube-proxy"
+  args:
+    chdir: "/etc/kubernetes/pki"
+
+- name: Copy ca.pem file from master to node
+  command: "cat /etc/kubernetes/pki/ca.pem"
+  register: ca_init
+ 
+- name: Storing ca.pem for node
+  local_action: copy content={{ ca_init.stdout }} dest={{ ca_file }}
+
+- name: Copy kube-proxy.pem file from master to node
+  command: "cat /etc/kubernetes/pki/kube-proxy.pem"
+  register: kubeproxypem_init
+ 
+- name: Storing kube-proxy.pem for node
+  local_action: copy content={{ kubeproxypem_init.stdout }} dest={{ kubeproxy_file }}
+
+- name: Copy kube-proxy-key.pem file from master to node
+  command: "cat /etc/kubernetes/pki/kube-proxy-key.pem"
+  register: kubeproxypemkey_init
+ 
+- name: Storing kube-proxy-key.pem for node
+  local_action: copy content={{ kubeproxypemkey_init.stdout }} dest={{ kubeproxykey_file }}
+
+- name: Copy kubeconfig.sh
+  template:
+    src: "../templates/kubeconfig.j2"
+    dest: "/etc/kubernetes/pki/kubeconfig.sh"
+    owner: "root"
+    group: "root"
+    mode: 0700
+  
+- name: Generate kubeconfig file
+  shell: "./kubeconfig.sh"
+  args:
+    chdir: "/etc/kubernetes/pki"
+
+- name: Move the kubeconfig file to /etc/kubernetes
+  shell: "mv kube-proxy.kubeconfig /etc/kubernetes/proxy.conf"
+
+- name: Generate yaml of kube-proxy daemonset
+  shell: "kubectl get ds kube-proxy -n kube-system -o yaml > kube_proxy_ds.yaml"
+  args:
+    chdir: "/etc/kubernetes/"
+
+- name: Checker for service-account
+  shell: "cat kube_proxy_ds.yaml"
+  register: ds
+  args:
+    chdir: "/etc/kubernetes/"
+
+- name: Edit daemonset kube-proxy
+  lineinfile:
+    path: "/etc/kubernetes/kube_proxy_ds.yaml"
+    insertafter: '- command:'
+    line: '        - --kubeconfig=/etc/kubernetes/proxy.conf'
+  when: not(ds.stdout.find('kubeconfig') != -1)
+
+- name: Apply Changes
+  shell: "kubectl apply -f kube_proxy_ds.yaml"
+  args:
+    chdir: "/etc/kubernetes/"
+
+
+

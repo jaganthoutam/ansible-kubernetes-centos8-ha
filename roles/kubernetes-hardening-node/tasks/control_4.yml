@@ -8,9 +8,58 @@
     mode: 0644
     state: file
 
-# - name: |
-#          "4.1.3 Ensure that the proxy kubeconfig file permissions are set to 644 or more restrictive (Scored)"
-#          "4.1.4 Ensure that the proxy kubeconfig file ownership is set to root:root (Scored)"
+- name: Copy ca.pem to node
+  copy:
+    src: "{{ ca_file }}"
+    dest: "{{ ca_file }}"
+    mode: '0644'
+
+- name: Copy ca.pem file
+  shell: "cat {{ ca_file }} > /etc/kubernetes/pki/ca.pem"
+
+- name: Copy kube-proxy.pem to node
+  copy:
+    src: "{{ kubeproxy_file }}"
+    dest: "{{ kubeproxy_file }}"
+    mode: '0644'
+
+- name: Copy kube-proxy.pem file
+  shell: "cat {{ kubeproxy_file }} > /etc/kubernetes/pki/kube-proxy.pem"
+
+- name: Copy kube-proxy-key.pem to node
+  copy:
+    src: "{{ kubeproxykey_file }}"
+    dest: "{{ kubeproxykey_file }}"
+    mode: '0644'
+
+- name: Copy kube-proxy-key.pem file
+  shell: "cat {{ kubeproxykey_file }} > /etc/kubernetes/pki/kube-proxy-key.pem"
+
+- name: Copy kubeconfig.sh
+  template:
+    src: "../templates/kubeconfig.j2"
+    dest: "/etc/kubernetes/pki/kubeconfig.sh"
+    owner: "root"
+    group: "root"
+    mode: 0700
+  
+- name: Generate kubeconfig file
+  shell: "./kubeconfig.sh"
+  args:
+    chdir: "/etc/kubernetes/pki"
+
+- name: Move the kubeconfig file to /etc/kubernetes
+  shell: "mv kube-proxy.kubeconfig /etc/kubernetes/proxy.conf"
+
+- name: |
+         "4.1.3 Ensure that the proxy kubeconfig file permissions are set to 644 or more restrictive (Scored)"
+         "4.1.4 Ensure that the proxy kubeconfig file ownership is set to root:root (Scored)"
+  file:
+    path: "/etc/kubernetes/proxy.conf"
+    owner: root
+    group: root
+    mode: 0644
+    state: file
 
 - name: |
          "4.1.5 Ensure that the kubelet.conf file permissions are set to 644 or more restrictive (Scored)"
