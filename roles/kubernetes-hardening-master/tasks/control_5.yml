@@ -144,7 +144,7 @@
 
 - name: Copy network policies yaml to directory
   copy:
-    src: "../files/network-policies-yaml"
+    src: "../files/network-policies.yaml"
     dest: "/etc/kubernetes/policies/network-policies.yaml" 
     mode: 0644
   when: not(np.stdout.find('default-deny-all') != -1)
