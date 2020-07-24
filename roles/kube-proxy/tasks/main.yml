@@ -1,0 +1,3 @@
+- name: Apply changes in kube-proxy
+  import_tasks: kube-proxy.yml
+  when: kube-proxy | bool

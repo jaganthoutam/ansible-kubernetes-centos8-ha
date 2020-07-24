@@ -4,7 +4,14 @@
   roles:
     - { role: kubernetes-hardening-master, tags: ["kubernetes-hardening-master"] }
 
-- name: kubernetes-hardening-master
+- name: kubernetes-hardening-node
+  hosts: kubernetes_node
   become: yes
   roles:
     - { role: kubernetes-hardening-node, tags: ["kubernetes-hardening-node"] }
+
+- name: kube-proxy
+  hosts: kubernetes_master
+  become: yes
+  roles:
+    - { role: kube-proxy, tags: ["kube-proxy"] }
