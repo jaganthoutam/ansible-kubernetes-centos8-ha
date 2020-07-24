@@ -109,7 +109,7 @@
 
 - name: Copy pod policies yaml to directory
   copy:
-    src: "../files/pod-policies-yaml"
+    src: "../files/pod-policies.yaml"
     dest: "/etc/kubernetes/policies/pod-policies.yaml" 
     mode: 0644
 
