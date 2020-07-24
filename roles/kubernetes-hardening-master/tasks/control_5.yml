@@ -167,9 +167,31 @@
 
 - name: 5.7.2 Ensure that the seccomp profile is set to docker/default in your pod definitions (Not Scored)
   debug: msg="Enable docker/default seccomp profile in your pod definitions."
-#    - --feature-gates=AllAlpha=true
-#- --service-account-signing-key-file=/etc/kubernetes/pki/sa.key
-#- --service-account-issuer=kubernetes.default.svc
+
+- name: "Checker for kube-apiserver configuration"
+  shell: "cat {{ kubeapiserver_config }}"
+  register: presence_apiserver
+
+- name: 5.7.2 Ensure that the seccomp profile is set to docker/default in your pod definitions (Not Scored)
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --feature-gates=AllAlpha=true'
+  when: presence_apiserver.stdout is not search('feature-gates') 
+
+- name: 5.7.2 Ensure that the seccomp profile is set to docker/default in your pod definitions (Not Scored)
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --service-account-signing-key-file=/etc/kubernetes/pki/sa.key'
+  when: presence_apiserver.stdout is not search('service-account-signing-key-file') 
+
+- name: 5.7.2 Ensure that the seccomp profile is set to docker/default in your pod definitions (Not Scored)
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --service-account-issuer=kubernetes.default.svc'
+  when: presence_apiserver.stdout is not search('service-account-issue') 
 
 - name: 5.7.3 Apply Security Context to Your Pods and Containers (Not Scored)
   debug: msg="Apply Security Context to Your Pods and Containers"
