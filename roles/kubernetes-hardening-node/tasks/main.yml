@@ -1,3 +1,9 @@
 - name: Worker Nodes
+  hosts: kubernetes_node
   import_tasks: control_4.yml
   when: control_4 | bool
+
+- name: apply Changes in kube-proxy
+  hosts: kubernetes_master
+  import_tasks: kube-proxy.yml
+  when: kube-proxy | bool
