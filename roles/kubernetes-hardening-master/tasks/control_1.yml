@@ -26,12 +26,13 @@
   shell: "cat {{ kubeapiserver_config }}"
   register: presence_apiserver
 
-- name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
-  lineinfile:
-    path: "{{ kubeapiserver_config }}"
-    insertafter: '- kube-apiserver'
-    line: '    - --anonymous-auth=false'
-  when: presence_apiserver.stdout is not search('anonymous-auth')
+# I commented it because anonymous-auth=false is not supported with kubeadm install.
+# - name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
+#   lineinfile:
+#     path: "{{ kubeapiserver_config }}"
+#     insertafter: '- kube-apiserver'
+#     line: '    - --anonymous-auth=false'
+#   when: presence_apiserver.stdout is not search('anonymous-auth')
 
 - name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
   lineinfile:
