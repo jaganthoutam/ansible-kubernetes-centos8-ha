@@ -10,28 +10,36 @@
 - name: 5.1.2 Minimize access to secrets (Not Scored) - Role
   debug: msg="Where possible, remove get, list and watch access to secret objects in the cluster."
 
-- shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
+- shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs"
   register: output_5_1_2_role
 
 - debug: msg="No role has an access to secrets"
-  when: output_5_1_2_role.stdout_lines == ""
+  when: not(output_5_1_2_role.stdout.find('secrets') != -1)
+
+- shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
+  register: output_5_1_2_role_with_output
+  when: output_5_1_2_role.stdout.find('secrets') != -1
 
 - name: 5.1.2 Minimize access to secrets (Not Scored) - Role
-  debug: var=output_5_1_2_role.stdout_lines
-  when: output_5_1_2_role.stdout_lines != ""
+  debug: var=output_5_1_2_role_with_output.stdout_lines
+  when: output_5_1_2_role.stdout.find('secrets') != -1
 
 - name: 5.1.2 Minimize access to secrets (Not Scored) - ClusterRole
   debug: msg="Where possible, remove get, list and watch access to secret objects in the cluster."
 
-- shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
+- shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs"
   register: output_5_1_2_clusterrole
 
 - debug: msg="No clusterrole has an access to secrets"
-  when: output_5_1_2_clusterrole.stdout_lines == ""
+  when: not(output_5_1_2_clusterrole.stdout.find('secrets') != -1)
+
+- shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep secrets"
+  register: output_5_1_2_clusterrole_with_output
+  when: output_5_1_2_clusterrole.stdout.find('secrets') != -1
 
 - name: 5.1.2 Minimize access to secrets (Not Scored) - ClusterRole
-  debug: var=output_5_1_2_clusterrole.stdout_lines
-  when: output_5_1_2_clusterrole.stdout_lines != ""
+  debug: var=output_5_1_2_clusterrole_with_output.stdout_lines
+  when: output_5_1_2_clusterrole.stdout.find('secrets') != -1
 
 - name: 5.1.3 Minimize wildcard use in Roles and ClusterRoles (Not Scored) - Role
   debug: msg="Where possible replace any use of wildcards in clusterroles and roles with specific objects or actions."
@@ -40,15 +48,15 @@
   register: output_5_1_3_role
 
 - debug: msg="No role has wildcard"
-  when: output_5_1_3_role.stdout is not search('*')
+  when: not(output_5_1_3_role.stdout.find('*') != -1)
 
 - name: 5.1.3 Minimize wildcard use in Roles and ClusterRoles (Not Scored) - Role
   shell: "kubectl get roles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep '*'"
   register: output_5_1_3_role_with_output
-  when: output_5_1_3_role.stdout is search('*')
+  when: output_5_1_3_role.stdout.find('*') != -1
 
 - debug: var=output_5_1_3_role_with_output.stdout_lines
-  when: output_5_1_3_role.stdout is search('*')
+  when: output_5_1_3_role.stdout.find('*') != -1
 
 - name: 5.1.3 Minimize wildcard use in Roles and ClusterRoles (Not Scored) - ClusterRole
   debug: msg="Where possible replace any use of wildcards in clusterroles and roles with specific objects or actions."
@@ -57,14 +65,14 @@
   register: output_5_1_3_clusterrole
 
 - debug: msg="No clusterrole has wildcard"
-  when: output_5_1_3_clusterrole.stdout is not search('*')
+  when: not(output_5_1_3_clusterrole.stdout.find('*') != -1)
 
 - shell: "kubectl get clusterroles --all-namespaces -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep '*'"
   register: output_5_1_3_clusterrole_with_output
-  when: output_5_1_3_clusterrole_with_output.stdout is search('*')
+  when: output_5_1_3_clusterrole.stdout.find('*') != -1
 
 - debug: var=output_5_1_3_clusterrole_with_output.stdout_lines
-  when: output_5_1_3_clusterrole.stdout is search('*')
+  when: output_5_1_3_clusterrole.stdout.find('*') != -1
 
 - name: 5.1.4 Minimize access to create pods (Not Scored)
   debug: msg="Where possible, remove create access to pod objects in the cluster."
@@ -73,15 +81,15 @@
   register: output_5_1_4_clusterrole
 
 - debug: msg="No clusterrole has an access to create pods"
-  when: output_5_1_4_clusterrole.stdout is not search('create')
+  when: not(output_5_1_4_clusterrole.stdout.find('create') != -1)
 
 - shell: "kubectl get clusterroles -o=custom-columns=NAME:.metadata.name,RESOURCES:.rules[].resources,VERBS:.rules[].verbs | grep pods | grep create"
   register: output_5_1_4_clusterrole_with_output
-  when: output_5_1_4_clusterrole.stdout is search('create')
+  when: output_5_1_4_clusterrole.stdout.find('create') != -1
 
 - name: 5.1.4 Minimize access to create pods (Not Scored)
   debug: var=output_5_1_4_clusterrole_with_output.stdout_lines
-  when: output_5_1_4_clusterrole.stdout is search('create')
+  when: output_5_1_4_clusterrole.stdout.find('create') != -1
 
 # - name: 5.1.5 Ensure that default service accounts are not actively used. (Scored)
 #   shell: "kubectl patch serviceaccount default -p $'automountServiceAccountToken: false'"
