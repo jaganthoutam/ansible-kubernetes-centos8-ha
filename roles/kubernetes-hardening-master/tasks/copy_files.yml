@@ -84,28 +84,4 @@
   args:
     chdir: "/etc/kubernetes/pki"
 
-- name: Generate yaml of kube-proxy daemonset
-  shell: "kubectl get ds kube-proxy -n kube-system -o yaml > kube_proxy_ds.yaml"
-  args:
-    chdir: "/etc/kubernetes/"
-
-- name: Checker for service-account
-  shell: "cat kube_proxy_ds.yaml"
-  register: ds
-  args:
-    chdir: "/etc/kubernetes/"
-
-- name: Edit daemonset kube-proxy
-  lineinfile:
-    path: "/etc/kubernetes/kube_proxy_ds.yaml"
-    insertafter: '- command:'
-    line: '        - --kubeconfig=/etc/kubernetes/proxy.conf'
-  when: not(ds.stdout.find('kubeconfig') != -1)
-
-- name: Apply Changes
-  shell: "kubectl apply -f kube_proxy_ds.yaml"
-  args:
-    chdir: "/etc/kubernetes/"
-
-
 
