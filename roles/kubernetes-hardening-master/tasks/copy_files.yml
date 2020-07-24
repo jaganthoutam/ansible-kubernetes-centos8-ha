@@ -81,6 +81,8 @@
 
 - name: Move the kubeconfig file to /etc/kubernetes
   shell: "mv kube-proxy.kubeconfig /etc/kubernetes/proxy.conf"
+  args:
+    chdir: "/etc/kubernetes/pki"
 
 - name: Generate yaml of kube-proxy daemonset
   shell: "kubectl get ds kube-proxy -n kube-system -o yaml > kube_proxy_ds.yaml"
