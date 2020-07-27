@@ -11,7 +11,7 @@
 #    group: root
 #    mode: 0644
 #    state: file
-#  when: res.stat.exists == True
+#  when: res.stat.exists == true
 #  tags:
 #   - scored
 #   - section3.1
@@ -29,7 +29,7 @@
 #    group: root
 #    mode: 0644
 #    state: file
-#  when: res.stat.exists == True
+#  when: res.stat.exists == true
 #  tags:
 #   - scored
 #   - section3.3
@@ -48,14 +48,14 @@
 #    group: root
 #    mode: 0755
 #    state: directory
-#  when: res.stat.exists == True
+#  when: res.stat.exists == true
 #  tags:
 #   - scored
 #   - section3.5
 #   - section3.6
 
 - stat:
-    paths: /etc/docker/certs.d
+    path: /etc/docker/certs.d
   register: path_cert_reg
   
 - name: |
@@ -71,7 +71,7 @@
     group: root
     mode: 0444
     state: file
-  when: path_cert_reg.stat.exists == True
+  when: path_cert_reg.stat.exists == true
   tags:
    - scored
    - section3.7
@@ -93,7 +93,7 @@
     group: root
     mode: 0444
     state: file
-  when: res.stat.exists == True
+  when: res.stat.exists == true
   tags:
    - scored
    - section3.9
@@ -116,7 +116,7 @@
     group: root
     mode: 0444
     state: file
-  when: res.stat.exists == True
+  when: res.stat.exists == true
   tags:
    - scored
    - section3.11
@@ -139,7 +139,7 @@
     group: root
     mode: 0400
     state: file
-  when: res.stat.exists == True
+  when: res.stat.exists == true
   tags:
    - scored
    - section3.13
@@ -157,7 +157,7 @@
 #    group: docker
 #    mode: 0660
 #    state: file
-#  when: res.stat.exists == True
+#  when: res.stat.exists == true
 #  tags:
 #   - scored
 #   - section3.15
@@ -179,7 +179,7 @@
     group: root
     mode: 0644
     state: file
-  when: result_daemon.stat.exists == True
+  when: result_daemon.stat.exists == true
   tags:
    - scored
    - section3.17
@@ -201,7 +201,7 @@
     group: root
     mode: 0644
     state: file
-  when: result_default_docker.stat.exists == True
+  when: result_default_docker.stat.exists == true
   tags:
    - scored
    - section3.19

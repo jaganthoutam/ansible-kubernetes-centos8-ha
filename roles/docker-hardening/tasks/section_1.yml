@@ -37,7 +37,7 @@
    - section1.4
 
 - name: 1.5 Ensure auditing is configured for the docker daemon (Scored)
-  shell: auditctl -l | grep /usr/bin/dockerd| wc -l
+  shell: auditctl -l | grep /usr/bin/dockerd | wc -l
   ignore_errors: yes
   register: audit_result
 

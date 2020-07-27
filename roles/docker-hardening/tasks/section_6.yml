@@ -1,15 +1,26 @@
 - name: 6.1 Ensure image sprawl is avoided (Not Scored)
-  debug: msg="Perform regular security audits of your host system and containers. Current list of images."
-  docker_host_info:
-    images: yes
+  shell: docker images | awk '{print $3}'
+  ignore_errors: yes
   register: result
+
+- debug: msg="Perform regular security audits of your host system and containers. Current list of images Id:"
+
+- debug:
+    msg: "{{ result.stdout }}"
   tags:
    - scored
    - section6.1
 
 - name: 6.2 Ensure container sprawl is avoided (Not Scored)
-  debug: msg="Current list of containers with exited status."
-  shell: docker info --format '{{ .ContainersStopped }}'
+  shell: docker ps -a | grep Exited |  awk '{print $1}' | wc -l
+  ignore_errors: yes
+  register: result
+
+- debug: msg="N/A Current list of containers are all in Up status."
+  when: result.stdout == 0
+  
+- shell: docker rm $(docker ps -q -f status=exited)
+  when: result.stdout != 0
   tags:
    - not_scored
    - section6.2

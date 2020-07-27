@@ -1,3 +1,4 @@
+---
 - name: 5.1 Ensure AppArmor Profile is Enabled (Scored)
   debug: msg="Start Docker with --security-opt apparmor=docker-default"
   tags:
@@ -44,9 +45,16 @@
 #   - scored
 #   - section5.7
 
+
 - name: 5.8 Ensure only needed ports are open on the container (Scored)
-  debug: msg="Use the -p (lowercase) or --publish flag to explicitly define the ports that you need for a particular container instance."
-  shell: docker ps --quiet | xargs docker inspect --format '{{ .Id }}: Ports={{ .NetworkSettings.Ports }}'
+  shell: for i in `docker ps --quiet`; do PORT_SET=`docker inspect $i | grep -A1 '"Ports":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | paste -s -d ' '`; echo $i = $PORT_SET; done
+  ignore_errors: yes
+  register: container_ports
+  
+- debug: msg="Use the -p (lowercase) or --publish flag to explicitly define the ports that you need for a particular container instance."
+  
+- debug:
+    msg: "{{ container_ports.stdout_lines }}"
   tags:
    - scored
    - section5.8
@@ -58,39 +66,66 @@
 #   - section5.9
 
 - name: 5.10 Ensure memory usage for container is limited (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do MEM_SET=`docker inspect $i | grep '"Memory":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $MEM_SET"; done
+  ignore_errors: yes
+  register: memory_usage
+  
+- debug: msg="This is configuration is set when containers are run. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ memory_usage.stdout_lines }}"
   tags:
    - scored
    - section5.10
 
 - name: 5.11 Ensure CPU priority is set appropriately on the container (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do CPU_SET=`docker inspect $i | grep '"NanoCpus":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $CPU_SET"; done
+  ignore_errors: yes
+  register: cpu_shares
+  
+- debug: msg="This is configuration is set when containers are run. Set in docker-compose files"
+  
+- debug: 
+    msg: "{{ cpu_shares.stdout_lines }}"  
   tags:
    - scored
    - section5.11
 
 - name: 5.12 Ensure the container's root filesystem is mounted as read only (Scored)
-  debug: msg="Start Docker with --read-only option"
-  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Name }}: ReadonlyRootfs={{ .HostConfig.ReadonlyRootfs }}' | awk -F\/ '{print $2}' | awk -F\: '{print $1}'
-  register: docker_names 
-  docker_container:
-    name: "{{ item }}"
-    with_items: "{{ docker_names }}"
-    read_only: yes
+  shell: for i in `docker ps --quiet --all`; do RO_SET=`docker inspect $i | grep '"ReadonlyRootfs":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $RO_SET"; done
+  ignore_errors: yes
+  register: root_filesystem  
+  
+- debug: msg="Start Docker with --read-only option. Set in docker-compose files"
+  
+- debug: 
+    msg: "{{ root_filesystem.stdout_lines }}" 
   tags:
    - scored
    - section5.12
 
 - name: 5.13 Ensure incoming container traffic is binded to a specific host interface (Scored)
-  debug: msg="Need to replace wildcard IP address 0.0.0.0 with specific host interface."
-  shell: docker ps --quiet | xargs docker inspect --format '{{ .Id }}: Ports={{ .NetworkSettings.Ports }}'
+  shell: for i in `docker ps --quiet --all`; do PORT_SET=`docker inspect $i | grep -A1 '"Ports":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | paste -s -d ' '`; echo $i = $PORT_SET; done
+  ignore_errors: yes
+  register: host_interface
+  
+- debug: msg="Need to replace wildcard IP address 0.0.0.0 with specific host interface. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ host_interface.stdout_lines }}"   
   tags:
    - scored
    - section5.13
 
 - name: 5.14 Ensure 'on-failure' container restart policy is set to '5' (Scored)
-  debug: msg="Values should be RestartPolicyName=no and just RestartPolicyName= or RestartPolicyName=on-failure and MaximumRetryCount=<5"
-  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: RestartPolicyName={{ .HostConfig.RestartPolicy.Name }} MaximumRetryCount={{ .HostConfig.RestartPolicy.MaximumRetryCount }}'
+  shell: for i in `docker ps --quiet --all`; do POLICY_NAME=`docker inspect $i | grep -E '"RestartPolicy":|"Name":' | grep -A1 '"RestartPolicy"' | grep -v RestartPolicy | sed 's/[[:space:]]//g' | sed 's/^$//g'`; POLICY_MAX=`docker inspect $i | grep -E '"RestartPolicy":|"MaximumRetryCount":' | grep -A1 '"RestartPolicy"' | grep -v RestartPolicy | sed 's/[[:space:]]//g' | sed 's/^$//g'`; echo $i RestartPolicy = $POLICY_NAME $POLICY_MAX; done
+  ignore_errors: yes
+  register: restart_policy
+  
+- debug: msg="Values should be RestartPolicyName=no and just RestartPolicyName= or RestartPolicyName=on-failure and MaximumRetryCount=<5. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ restart_policy.stdout_lines }}"   
   tags:
    - scored
    - section5.14
@@ -114,8 +149,14 @@
 #   - section5.17
 
 - name: 5.18 Ensure the default ulimit is overwritten at runtime, only if needed (Not Scored)
-  debug: msg="Should return Ulimits=<no value> for each container instance. Only override the default ulimit settings if needed."
-  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: Ulimits={{ .HostConfig.Ulimits }}'
+  shell: for i in `docker ps --quiet --all`; do MAP_1=`docker inspect $i | grep -E '"Ulimits":|"Name":|"Hard":|"Soft":' | grep -A6 Ulimits | grep -v Ulimits| sed 's|,||g' | sed 's|[[:space:]]||g'| sed -n "1,3"p | paste -s -d ' '`;  MAP_2=`docker inspect $i | grep -E '"Ulimits":|"Name":|"Hard":|"Soft":' | grep -A6 Ulimits | grep -v Ulimits| sed 's|,||g' | sed 's|[[:space:]]||g'| sed -n "4,6"p | paste -s -d ' '`;  echo $i Ulimits=$MAP_1 $MAP_2; done
+  ignore_errors: yes
+  register: result_ulimit
+  
+- debug: msg="Should return Ulimits=<no value> for each container instance. Only override the default ulimit settings if needed. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ result_ulimit.stdout_lines }}"   
   tags:
    - not_scored
    - section5.18
@@ -139,15 +180,47 @@
 #   - section5.21
 
 - name: 5.22 Ensure docker exec commands are not used with privileged option (Scored)
-  debug: msg="Do not use --privileged option in docker exec command."
-  shell: ausearch -k docker | grep exec | grep privileged
+  shell: ausearch -k docker | grep exec | grep privileged | wc -l
+  ignore_errors: yes
+  register: privileged_option
+  
+- debug: msg="Do not use --privileged option in docker exec command. privileged option not used"
+  when: privileged_option.stdout == '0'
+
+- shell: ausearch -k docker | grep exec | grep privileged
+  ignore_errors: yes
+  register: result_privileged
+  when: privileged_option.stdout != '0'
+
+- debug: msg="Do not use --privileged option in docker exec command. List of containers with privileged option"  
+  when: privileged_option.stdout != '0'
+
+- debug: 
+    msg: "{{ result_privileged.stdout_lines }}" 
+  when: privileged_option.stdout != '0'    
   tags:
    - scored
    - section5.22
 
 - name: 5.23 Ensure docker exec commands are not used with user option (Scored)
-  debug: msg="Do not use --user option in docker exec command."
-  shell: ausearch -k docker | grep exec | grep user
+  shell: ausearch -k docker | grep exec | grep user | wc -l
+  ignore_errors: yes
+  register: user_option
+  
+- debug: msg="Do not use --user option in docker exec command. user option not used."
+  when: user_option.stdout == '0'
+
+- shell: ausearch -k docker | grep exec | grep privileged
+  ignore_errors: yes
+  register: result_user
+  when: user_option.stdout != '0'
+
+- debug: msg="Do not use --user option in docker exec command. With user option."
+  when: user_option.stdout != '0'
+
+- debug: 
+    msg: "{{ result_user.stdout_lines }}"
+  when: user_option.stdout != '0'  
   tags:
    - scored
    - section5.23
@@ -159,14 +232,27 @@
 #   - section5.24
    
 - name: 5.25 Ensure the container is restricted from acquiring additional privileges (Scored)
-  debug: msg="Security options currently configured for the containers should include no-new-privileges. See Control 2.18"
-  shell: docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: SecurityOpt={{ .HostConfig.SecurityOpt }}'
+  shell: for i in `docker ps --quiet --all`; do SEC_OPT=`docker inspect $i | sed -n '/SecurityOpt/,/\]/p' | grep -v SecurityOpt | grep -v ']' | sed 's|,||g' | sed 's|[[:space:]]||g' | paste -s -d ' '`; echo $i SecurityOpt=$SEC_OPT; done
+  ignore_errors: yes
+  register: additional_privileges  
+  
+- debug: msg="Security options currently configured for the containers should include no-new-privileges. See Control 2.18"
+
+- debug: 
+    msg: "{{ additional_privileges.stdout_lines }}"
   tags:
    - scored
    - section5.25
 
 - name: 5.26 Ensure container health is checked at runtime (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do HEALTH_STATUS=`docker inspect $i | grep -E '"State":|"Health":|"Status":' | grep -A1 '"Health":' | grep '"Status":' | sed 's|,||g' | sed 's|[[:space:]]||g'`; echo $i Health=$HEALTH_STATUS; done
+  ignore_errors: yes
+  register: health_check 
+  
+- debug: msg="This configuration is set when containers are run. health is checked at runtime"
+  
+- debug: 
+    msg: "{{ health_check.stdout_lines }}"
   tags:
    - scored
    - section5.26
@@ -178,7 +264,14 @@
    - section5.27
 
 - name: 5.28 Ensure PIDs cgroup limit is used (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do PIDS_LIMIT=`docker inspect $i | grep '"PidsLimit":' | sed 's|,||g' | sed 's|[[:space:]]||g'`; echo $i Health=$PIDS_LIMIT; done
+  ignore_errors: yes
+  register: pids_limit 
+  
+- debug: msg="This configuration is set when containers are run. All containers are set with PIDs cgroup limit"
+
+- debug: 
+    msg: "{{ pids_limit.stdout_lines }}"
   tags:
    - scored
    - section5.28
@@ -197,7 +290,24 @@
 #   - section5.30
 
 - name: 5.31 Ensure the Docker socket is not mounted inside any containers (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: docker ps --quiet --all | xargs docker inspect | grep docker.sock | wc -l
+  ignore_errors: yes
+  register: docker_socket 
+  
+- debug: msg="Docker socker not mounted inside any containers"
+  when: docker_socket.stdout == '0'
+
+- shell: docker ps --quiet --all | xargs docker inspect | grep docker.sock
+  ignore_errors: yes
+  register: docker_socket_w 
+  when: docker_socket.stdout != '0'
+  
+- debug: msg="Containers with Docker socker not mounted inside."
+  when: docker_socket.stdout != '0'  
+
+- debug:
+    msg: "{{ docker_socket_w.stdout_lines }}"
+  when: docker_socket.stdout != '0'    
   tags:
    - scored
    - section5.31
