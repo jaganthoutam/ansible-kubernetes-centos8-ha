@@ -1,0 +1,21 @@
+{
+  "default-ulimits": {
+    "nofile": {
+      "hard": 200,
+      "name": "nofile",
+      "soft": 100
+    },
+    "nproc": {
+      "hard": 2048,
+      "name": "nproc",
+      "soft": 1024
+    }
+  },
+  "icc": false,
+  "live-restore": true,
+  "no-new-privileges": true,
+  "selinux-enabled": true,
+  "userland-proxy": false,
+  "disable-legacy-registry": true,
+  "userns-remap": "default"
+}
