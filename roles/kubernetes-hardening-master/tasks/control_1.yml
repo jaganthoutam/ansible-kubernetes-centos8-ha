@@ -9,7 +9,8 @@
     state: directory
 
 - name: "Audit: Check the Container Network Interface permissions and ownership (1.1.9 and 1.1.10)"
-  shell: "ll {{ cni_directory }}"
+  stat: 
+    path: "{{ cni_directory }}"
   register: cni_check
 
 - debug: var=cni_check
