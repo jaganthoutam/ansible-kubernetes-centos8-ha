@@ -12,7 +12,7 @@
 - name: Edit daemonset kube-proxy
   lineinfile:
     path: "/etc/kubernetes/kube_proxy_ds.yaml"
-    insertafter: '- command:'
+    insertafter: ' hostname-override'
     line: '        - --kubeconfig=/etc/kubernetes/proxy.conf'
   when: not(ds.stdout.find('kubeconfig') != -1)
 

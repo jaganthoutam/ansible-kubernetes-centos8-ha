@@ -10,8 +10,8 @@
   roles:
     - { role: kubernetes-hardening-node, tags: ["kubernetes-hardening-node"] }
 
-# - name: kube-proxy
-#   hosts: kubernetes_master
-#   become: yes
-#   roles:
-#     - { role: kube-proxy, tags: ["kube-proxy"] }
+- name: kube-proxy
+  hosts: kubernetes_master
+  become: yes
+  roles:
+    - { role: kube-proxy, tags: ["kube-proxy"] }
