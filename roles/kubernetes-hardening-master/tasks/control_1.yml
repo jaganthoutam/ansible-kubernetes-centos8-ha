@@ -48,12 +48,7 @@
     state: directory
 
 - name: "1.1.20 Ensure that the Kubernetes PKI certificate file permissions are set to 644 or more restrictive (Scored)"
-  file:
-    path: "/etc/kubernetes/pki/*.crt"
-    owner: root
-    group: root
-    mode: 0644
-    state: file
+  shell: "chmod -R 644 /etc/kubernetes/pki/*.crt"
 
 # I commented it because anonymous-auth=false is not supported with kubeadm install.
 # - name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
