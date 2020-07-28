@@ -46,4 +46,13 @@
     insertafter: '- kube-apiserver'
     line: '    - --audit-policy-file=/etc/kubernetes/policies/audit-policy.yaml'
   when: presence_apiserver.stdout is not search('audit-policy-file')
+
+- name: |
+         "Audit: 3.2.1 Ensure that a minimal audit policy is created (Scored) - Type is Manual"
+         "Audit: 3.2.2 Ensure that the audit policy covers key security concerns (Not Scored) - Type is Manual"
+  shell: "ps -ef | grep kube-apiserver | grep audit-policy-file"
+  register: audit_check
+
+- debug: msg="audit-policy-file exists"
+  when: audit_check.stdout.find('audit-policy-file') != -1
   

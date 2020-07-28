@@ -1,12 +1,17 @@
 - name: |
-        "1.1.9 Ensure that the Container Network Interface file permissions are set to 644 or more restrictive (Not Scored)"
-        "1.1.10 Ensure that the Container Network Interface file ownership is set to root:root (Not Scored)"
+        "1.1.9 Ensure that the Container Network Interface file permissions are set to 644 or more restrictive (Not Scored) - Type is Manual"
+        "1.1.10 Ensure that the Container Network Interface file ownership is set to root:root (Not Scored) - Type is Manual"
   file:
     path: "{{ cni_directory }}"
     owner: root
     group: root
     mode: 0644
     state: directory
+
+- name: "Audit: Check the Container Network Interface permissions and ownership (1.1.9 and 1.1.10)"
+  shell: "ll {{ cni_directory }}"
+  register: cni_check
+- debug: var=cni_check
 
 - name: Add group "etcd" to remote server
   group:
@@ -145,13 +150,18 @@
   shell: "head -c 32 /dev/urandom | base64"
   register: random_key_init
 
-- name: 1.2.34 Ensure that encryption providers are appropriately configured (Not Scored)
+- name: 1.2.34 Ensure that encryption providers are appropriately configured (Not Scored) -Type is Manual
   template:
     src: "../templates/secrets.yaml.j2"
     dest: "/etc/kubernetes/pki/EncryptionConfig.yaml"
     owner: "root"
     group: "root"
     mode: 0644
+
+- name: "Audit: 1.2.34 Ensure that encryption providers are appropriately configured (Not Scored) -Type is Manual"
+  shell: "ll /etc/kubernetes/pki/EncryptionConfig.yaml"
+  register: encryption_check
+- debug: var=encryption_check
 
 - name: 1.2.33 Ensure that the --encryption-provider-config argument is set as appropriate (Not Scored)
   lineinfile:
