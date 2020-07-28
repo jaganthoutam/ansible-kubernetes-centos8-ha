@@ -75,3 +75,6 @@ kube_scheduler_config: /etc/kubernetes/manifests/kube-scheduler.yaml
 ca_file: ca_pem
 kubeproxy_file: kube_proxy_pem
 kubeproxykey_file: kube_proxy_key_pem
+
+#cni directory
+cni_directory: /etc/cni/net.d
