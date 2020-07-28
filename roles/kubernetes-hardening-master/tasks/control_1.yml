@@ -12,7 +12,7 @@
   shell: "ll {{ cni_directory }}"
   register: cni_check
 
-- debug: var=cni_check
+- debug: var=cni_check
 
 - name: Add group "etcd" to remote server
   group:
@@ -163,7 +163,7 @@
   shell: "ll /etc/kubernetes/pki/EncryptionConfig.yaml"
   register: encryption_check
 
-- debug: var=encryption_check
+- debug: var=encryption_check
 
 - name: 1.2.33 Ensure that the --encryption-provider-config argument is set as appropriate (Not Scored)
   lineinfile:
