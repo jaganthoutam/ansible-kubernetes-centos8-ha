@@ -5,7 +5,7 @@
     - { role: kubernetes-hardening-master, tags: ["kubernetes-hardening-master"] }
 
 - name: kubernetes-hardening-node
-  hosts: kubernetes_node
+  hosts: kubernetes_nodes
   become: yes
   roles:
     - { role: kubernetes-hardening-node, tags: ["kubernetes-hardening-node"] }
