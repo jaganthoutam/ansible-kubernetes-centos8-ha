@@ -6,14 +6,27 @@
    - section5.1
 
 - name: 5.2 Ensure SELinux security options are set, if applicable (Scored)
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: selinux-enabled
-    value: true
-  notify: Reload docker
+  shell: grep selinux-enabled "{{ config_file }}" | grep true | wc -l
+  ignore_errors: yes
+  register: result
+  
+- debug: msg="SELinux security options already set."   
+  when: result.stdout > '0'
+  
+- debug: msg="SELinux security options already set."
+  when: result.stdout == '0'   
   tags:
    - scored
-   - section5.2
+   - section5.2  
+   
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: selinux-enabled
+#    value: true
+#  notify: Reload docker
+#  tags:
+#   - scored
+#   - section5.2
 
 #- name: 5.3 Ensure Linux Kernel Capabilities are restricted within containers (Scored)
 #  debug: msg="This is configuration is set when containers are run"

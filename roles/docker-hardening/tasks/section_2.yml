@@ -8,15 +8,36 @@
    content: {}
   when: st.stat.exists == False
 
-- name: "2.1 Ensure network traffic is restricted between containers on the default bridge (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: icc
-    value: false
-  notify: Reload docker
+#- name: "2.1 Ensure network traffic is restricted between containers on the default bridge (Scored)"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: icc
+#    value: false
+#  notify: Reload docker
+#  tags:
+#   - scored
+#   - section2.1
+
+- name: |
+        "2.1 Ensure network traffic is restricted between containers on the default bridge (Scored)"
+        "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
+        "2.13 Ensure operations on legacy registry (v1) are Disabled (Scored)"
+        "2.14 Ensure live restore is Enabled (Scored)"
+        "2.15 Ensure Userland Proxy is Disabled (Scored)"
+        "2.18 Ensure containers are restricted from acquiring new privileges (Scored)"
+  copy: 
+    src: "{{ src_file }}"
+    dest: "{{ config_file }}" 
+  notify: Reload docker	
   tags:
    - scored
    - section2.1
+   - section2.13
+   - section2.14
+   - section2.15
+   - section2.18   
+   - Not Scored
+   - section2.7
 
 #- name: "2.2 Ensure the logging level is set to 'info' (Scored)"
 #  jsonpatch: 
@@ -93,26 +114,26 @@
    - scored
    - section2.6
 
-- name: "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: default-ulimits
-    value: {
-              'nofile': {
-                  'soft': "{{ default_ulimits_nofile_soft }}",
-                  'hard': "{{ default_ulimits_nofile_hard }}",
-                  'name': 'nofile'
-              },
-              'nproc': {
-                  'soft': "{{ default_ulimits_nproc_soft }}",
-                  'hard': "{{ default_ulimits_nproc_hard }}",
-                  'name': 'nproc'
-              }
-           }
-  notify: Reload docker
-  tags:
-   - not_scored
-   - section2.7
+#- name: "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: default-ulimits
+#    value: {
+#              'nofile': {
+#                  'soft': "{{ default_ulimits_nofile_soft }}",
+#                  'hard': "{{ default_ulimits_nofile_hard }}",
+#                  'name': 'nofile'
+#              },
+#              'nproc': {
+#                  'soft': "{{ default_ulimits_nproc_soft }}",
+#                  'hard': "{{ default_ulimits_nproc_hard }}",
+#                  'name': 'nproc'
+#              }
+#           }
+#  notify: Reload docker
+#  tags:
+#   - not_scored
+#   - section2.7
 
 - name: "2.8 Enable user namespace support (Scored)"
   lineinfile:
@@ -125,15 +146,15 @@
    - scored
    - section2.8
 
-- name: "2.8 Enable user namespace support (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: userns-remap
-    value: default
-  notify: Reload docker
-  tags:
-   - scored
-   - section2.8
+#- name: "2.8 Enable user namespace support (Scored)"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: userns-remap
+#    value: default
+#  notify: Reload docker
+#  tags:
+#   - scored
+#   - section2.8
 
 #- name: "2.9 Ensure the default cgroup usage has been confirmed (Scored)"
 #  jsonpatch: 
@@ -200,25 +221,25 @@
    - scored
    - section2.13
 
-- name: "2.14 Ensure live restore is Enabled (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: live-restore
-    value: true
-  notify: Reload docker
-  tags:
-   - scored
-   - section2.14
-
-- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: userland-proxy
-    value: false
-  notify: Reload docker
-  tags:
-   - scored
-   - section2.15
+#- name: "2.14 Ensure live restore is Enabled (Scored)"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: live-restore
+#    value: true
+#  notify: Reload docker
+#  tags:
+#   - scored
+#   - section2.14
+#
+#- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: userland-proxy
+#    value: false
+#  notify: Reload docker
+#  tags:
+#   - scored
+#   - section2.15
 
 #- name: "2.16 Ensure daemon-wide custom seccomp profile is applied, if needed (Not Scored)"
 #  jsonpatch: 
@@ -241,26 +262,26 @@
 #   - scored
 #   - section2.17
 
-- name: 2.18 Ensure containers are restricted from acquiring new privileges (Scored)
-  shell: grep no-new-privileges "{{ config_file }}" | wc -l 
-  ignore_errors: true
-  register: no_new_priv_cnt
-  
-- shell: grep no-new-privileges "{{ config_file }}" | awk '{print $2}' | sed 's|,||g' 
-  ignore_errors: true
-  register: no_new_privileges
-  when: no_new_priv_cnt.stdout != '0' 
-  
-- debug: 
-    msg: "Acquiring new privileges is alread restricted and already set to {{ no_new_privileges.stdout }}."  
-  when: no_new_priv_cnt.stdout != '0' and no_new_privileges.stdout == "true"
-  
-- jsonpatch: 
-    file: "{{ config_file }}"
-    key: no-new-privileges
-    value: true
-  notify: Reload docker
-  when: no_new_priv_cnt.stdout == '0' or no_new_privileges.stdout == "false"
-  tags:
-   - scored
-   - section2.18
+#- name: 2.18 Ensure containers are restricted from acquiring new privileges (Scored)
+#  shell: grep no-new-privileges "{{ config_file }}" | wc -l 
+#  ignore_errors: true
+#  register: no_new_priv_cnt
+#  
+#- shell: grep no-new-privileges "{{ config_file }}" | awk '{print $2}' | sed 's|,||g' 
+#  ignore_errors: true
+#  register: no_new_privileges
+#  when: no_new_priv_cnt.stdout != '0' 
+#  
+#- debug: 
+#    msg: "Acquiring new privileges is alread restricted and already set to {{ no_new_privileges.stdout }}."  
+#  when: no_new_priv_cnt.stdout != '0' and no_new_privileges.stdout == "true"
+#  
+#- jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: no-new-privileges
+#    value: true
+#  notify: Reload docker
+#  when: no_new_priv_cnt.stdout == '0' or no_new_privileges.stdout == "false"
+#  tags:
+#   - scored
+#   - section2.18

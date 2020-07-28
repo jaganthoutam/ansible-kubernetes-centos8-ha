@@ -28,13 +28,22 @@
    - section1.3    
 
 - name: 1.4 Ensure only trusted users are allowed to control Docker daemon (Scored)
-  user:
-    name: "{{ item }}"
-    group: docker 
-  with_items: "{{ trusted_users }}"
+  shell: getent group docker
+  ignore_errors: yes
+  register: trusted_users_result
+
+- debug: msg="List of trusted users allowed to control Docker daemon"
+
+- debug:
+    msg: "{{ trusted_users_result.stdout_lines }}"
   tags:
    - scored
    - section1.4
+   
+#  user:
+#    name: "{{ item }}"
+#    group: docker 
+#  with_items: "{{ trusted_users }}"   
 
 - name: 1.5 Ensure auditing is configured for the docker daemon (Scored)
   shell: auditctl -l | grep /usr/bin/dockerd | wc -l
