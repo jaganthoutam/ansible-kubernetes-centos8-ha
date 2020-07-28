@@ -138,7 +138,7 @@
          "5.2.7 Minimize the admission of containers with the NET_RAW capability (Not Scored) -  Type is Manual"
          "5.2.8 Minimize the admission of containers with added capabilities (Not Scored) -  Type is Manual"
          "5.2.9 Minimize the admission of containers with capabilities assigned (Not Scored) -  Type is Manual"
-  shell: "kubectl create -f /etc/kubernetes/policies/pod-policies.yaml -  Type is Manual"
+  shell: "kubectl create -f /etc/kubernetes/policies/pod-policies.yaml"
   when: not(psp.stdout.find('restricted') != -1)
 
 - name: "Audit: Pod Policies"
