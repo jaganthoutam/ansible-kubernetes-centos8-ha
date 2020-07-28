@@ -155,7 +155,8 @@
     mode: 0644
 
 - name: "Audit: 1.2.34 Ensure that encryption providers are appropriately configured (Not Scored) -Type is Manual"
-  shell: "ll /etc/kubernetes/pki/EncryptionConfig.yaml"
+  stat:
+    path: "/etc/kubernetes/pki/EncryptionConfig.yaml"
   register: encryption_check
 
 - debug: var=encryption_check
