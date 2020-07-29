@@ -310,12 +310,12 @@
 - debug: msg="Docker socker not mounted inside any containers"
   when: docker_socket.stdout == '0'
 
-- shell: docker ps --quiet --all | xargs docker inspect | grep docker.sock
+- shell: for i in `docker ps --quiet --all`; do W_DOCKER_SOCK=`docker inspect $i | grep docker.sock | wc -l`; echo i$ docker.sock=$W_DOCKER_SOCK; done;
   ignore_errors: yes
   register: docker_socket_w 
   when: docker_socket.stdout != '0'
   
-- debug: msg="Containers with Docker socker not mounted inside."
+- debug: msg="Containers with Docker socker mounted inside."
   when: docker_socket.stdout != '0'  
 
 - debug:
