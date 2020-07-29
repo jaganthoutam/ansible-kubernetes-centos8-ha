@@ -247,33 +247,35 @@
   register: st
   
 - name: "2.13 Ensure operations on legacy registry (v1) are Disabled (Scored)"
-  shell: grep '"disable-legacy-registry"' "{{ config_file }}" | wc -l
-  ignore_errors: yes
-  register: result
-  when: st.stat.exists == True
-  
-- shell: grep '"disable-legacy-registry"' "{{ config_file }}" | grep true | wc -l
-  ignore_errors: yes
-  register: result_true
-  when: st.stat.exists == True and result.stdout != '0'    
-
-- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == True and result.stdout == '0'
-  
-- shell: MATCH_LINE=`grep -n '"disable-legacy-registry"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
-  
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == False  
-
-- debug: msg="Operations on legacy registry (v1) are already Disabled"
-  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout != '0'    
+- debug: msg="disable-legacy-registry is already removed in version v19.03.0"
   tags:
    - scored
    - section2.13
+   
+#  shell: grep '"disable-legacy-registry"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: grep '"disable-legacy-registry"' "{{ config_file }}" | grep true | wc -l
+#  ignore_errors: yes
+#  register: result_true
+#  when: st.stat.exists == True and result.stdout != '0'    
+#
+#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: MATCH_LINE=`grep -n '"disable-legacy-registry"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="Operations on legacy registry (v1) are already Disabled"
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout != '0'  
 
 - stat:
     path: "{{ config_file }}"
