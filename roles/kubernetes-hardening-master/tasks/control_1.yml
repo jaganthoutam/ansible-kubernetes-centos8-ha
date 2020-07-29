@@ -103,9 +103,9 @@
   shell: "sed -i '/enable-admission-plugins=/ s/$/,SecurityContextDeny/' {{ kubeapiserver_config }}"
   when: presence_apiserver.stdout is not search('SecurityContextDeny')
 
-- name: 1.2.16 Ensure that the admission control plugin PodSecurityPolicy is set (Scored)
-  shell: "sed -i '/enable-admission-plugins=/ s/$/,PodSecurityPolicy/' {{ kubeapiserver_config }}"
-  when: presence_apiserver.stdout is not search('PodSecurityPolicy')
+# - name: 1.2.16 Ensure that the admission control plugin PodSecurityPolicy is set (Scored)
+#   shell: "sed -i '/enable-admission-plugins=/ s/$/,PodSecurityPolicy/' {{ kubeapiserver_config }}"
+#   when: presence_apiserver.stdout is not search('PodSecurityPolicy')
 
 - name: 1.2.21 Ensure that the --profiling argument is set to false (Scored)
   lineinfile:
