@@ -47,13 +47,13 @@ control_plane_endpoint_port_ha: 8080
 install_metrics_server: true
 
 #Kubernetes Hardening
-control_1: true
-control_2: true
-control_3: true
-generate_cert: true
-copy_files: true
-control_4: true
-control_5: true
+control_1: false
+control_2: false
+control_3: false
+generate_cert: false
+copy_files: false
+control_4: false
+control_5: false
 
 #kubeapiserver config
 kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml

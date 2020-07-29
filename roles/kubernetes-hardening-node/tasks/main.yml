@@ -1,3 +1,4 @@
+---
 - name: Worker Nodes
-  import_tasks: control_4.yml
+  include: control_4.yml
   when: control_4 | bool

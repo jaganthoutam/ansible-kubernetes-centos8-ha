@@ -1,23 +1,24 @@
+---
 - name: Control Plane Components
-  import_tasks: control_1.yml
+  include: control_1.yml
   when: control_1 | bool and inventory_hostname in groups['kubernetes_masters']
 
 - name: etcd
-  import_tasks: control_2.yml
+  include: control_2.yml
   when: control_2 | bool and inventory_hostname in groups['kubernetes_masters']
 
 - name: Control Plane Configuration
-  import_tasks: control_3.yml
+  include: control_3.yml
   when: control_3 | bool and inventory_hostname in groups['kubernetes_masters']
 
 - name: Generate Certs
-  import_tasks: generate_cert.yml
+  include: generate_cert.yml
   when: generate_cert | bool and inventory_hostname in groups['kubernetes_master']
 
 - name: Copy Certs to Master
-  import_tasks: copy_files.yml
+  include: copy_files.yml
   when: copy_files | bool and inventory_hostname in groups['kubernetes_master_replicas']
 
 - name: Policies
-  import_tasks: control_5.yml
+  include: control_5.yml
   when: control_5 | bool and inventory_hostname in groups['kubernetes_masters']

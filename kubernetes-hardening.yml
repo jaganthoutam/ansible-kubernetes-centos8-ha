@@ -1,5 +1,5 @@
 - name: kubernetes-hardening-master
-  hosts: kubernetes_master
+  hosts: kubernetes_masters
   become: yes
   roles:
     - { role: kubernetes-hardening-master, tags: ["kubernetes-hardening-master"] }
