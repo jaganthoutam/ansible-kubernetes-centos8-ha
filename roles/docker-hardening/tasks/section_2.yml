@@ -247,7 +247,7 @@
   register: st
   
 - name: "2.13 Ensure operations on legacy registry (v1) are Disabled (Scored)"
-- debug: msg="disable-legacy-registry is already removed in version v19.03.0"
+  debug: msg="disable-legacy-registry is already removed in version v19.03.0"
   tags:
    - scored
    - section2.13
