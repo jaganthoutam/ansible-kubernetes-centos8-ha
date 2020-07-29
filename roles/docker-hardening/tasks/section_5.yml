@@ -4,30 +4,40 @@
   tags:
    - scored
    - section5.1
+   
+- stat:
+    path: "{{ config_file }}"
+  register: st   
 
 - name: 5.2 Ensure SELinux security options are set, if applicable (Scored)
-  shell: grep selinux-enabled "{{ config_file }}" | grep true | wc -l
+  shell: grep '"selinux-enabled"' "{{ config_file }}" | wc -l
   ignore_errors: yes
   register: result
+  when: st.stat.exists == True
   
-- debug: msg="SELinux security options already set."   
-  when: result.stdout > '0'
+- shell: grep '"selinux-enabled"' "{{ config_file }}" | grep true | wc -l
+  ignore_errors: yes
+  register: result_true
+  when: st.stat.exists == True and result.stdout != '0'    
+
+- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|selinux-enabled|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout == '0'
   
-- debug: msg="SELinux security options already set."
-  when: result.stdout == '0'   
+- shell: MATCH_LINE=`grep -n '"selinux-enabled"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
+  
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|selinux-enabled|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == False  
+
+- debug: msg="SELinux security options are already set"
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout != '0'  
   tags:
    - scored
    - section5.2  
    
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: selinux-enabled
-#    value: true
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section5.2
-
 #- name: 5.3 Ensure Linux Kernel Capabilities are restricted within containers (Scored)
 #  debug: msg="This is configuration is set when containers are run"
 #  tags:
