@@ -50,6 +50,9 @@
 - name: "1.1.20 Ensure that the Kubernetes PKI certificate file permissions are set to 644 or more restrictive (Scored)"
   shell: "chmod -R 644 /etc/kubernetes/pki/*.crt"
 
+- name: "1.1.21 Ensure that the Kubernetes PKI key file permissions are set to 600 (Not Scored)"
+  shell: "chmod -R 600 /etc/kubernetes/pki/*.key"
+
 # I commented it because anonymous-auth=false is not supported with kubeadm install.
 # - name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
 #   lineinfile:

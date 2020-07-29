@@ -12,8 +12,12 @@
     mode: 0644
 
 - name: "Checker for policies volumes"
-  shell: "cat {{ kubeapiserver_config }}"
-  register: presence_apiserver
+  shell: "grep -Fx \"    name: policies\" {{ kubeapiserver_config }} | wc -l"
+  register: presence_apiserver_volume
+
+- name: "Checker for policies volumes mount"
+  shell: "grep -Fx \"    - mountPath: /etc/kubernetes/policies\" {{ kubeapiserver_config }} | wc -l"
+  register: presence_apiserver_mount
 
 - name: Add volumes of policies
   lineinfile:
@@ -25,7 +29,7 @@
     - { line: '      type: DirectoryOrCreate' }
     - { line: '      path: /etc/kubernetes/policies' }
     - { line: '  - hostPath:' }
-  when: presence_apiserver.stdout is not search('/etc/kubernetes/policies')
+  when: presence_apiserver_volume.stdout=="0"
 
 - name: Add volumes mounts of policies
   lineinfile:
@@ -36,7 +40,7 @@
     - { line: '      readOnly: true' }
     - { line: '      name: policies' }
     - { line: '    - mountPath: /etc/kubernetes/policies' }
-  when: presence_apiserver.stdout is not search('/etc/kubernetes/policies')
+  when: presence_apiserver_mount.stdout=="0"
 
 - name: |
          "3.2.1 Ensure that a minimal audit policy is created (Scored)"

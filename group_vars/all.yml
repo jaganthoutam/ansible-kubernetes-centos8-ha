@@ -60,7 +60,7 @@ kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml
 #etcd data directory
 etcd_data_directory: /var/lib/etcd
 
-#kubelet config
+#kubelet config - NEED TO CHANGE THE LOCATION
 kubelet_config: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
 key_file: key_tls
 crt_file: crt_tls
