@@ -50,6 +50,7 @@ install_metrics_server: true
 control_1: true
 control_2: true
 control_3: true
+generate_cert: true
 copy_files: true
 control_4: true
 control_5: true
@@ -78,3 +79,5 @@ kubeproxykey_file: kube_proxy_key_pem
 
 #cni directory
 cni_directory: /etc/cni/net.d
+
+kubeconfig_file: proxy.conf
