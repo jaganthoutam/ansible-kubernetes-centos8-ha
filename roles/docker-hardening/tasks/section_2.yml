@@ -3,15 +3,6 @@
     path: "{{ config_file }}"
   register: st
 
-#- name: "2.1 Ensure network traffic is restricted between containers on the default bridge (Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: icc
-#    value: false
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section2.1
 - name: "2.1 Ensure network traffic is restricted between containers on the default bridge (Scored)"
   shell: grep '"icc"' "{{ config_file }}" | wc -l
   ignore_errors: yes
