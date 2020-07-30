@@ -1,6 +1,13 @@
 ---
 - name: 5.1 Ensure AppArmor Profile is Enabled (Scored)
-  debug: msg="Start Docker with --security-opt apparmor=docker-default"
+  shell: for i in `docker ps --quiet --all`; do APPARMOR=`docker inspect $i | grep AppArmorProfile | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; if [ -z $APPARMOR ]; then echo $i AppArmorProfile='<no value>'; else echo $i $APPARMOR; fi; echo " "; done
+  ignore_errors: yes
+  register: apparmor_result
+  
+- debug: msg="List of containers and their AppArmor Profile. Should be with defined apparmor or apparmor=docker-default"
+
+- debug: 
+    msg: "{{ apparmor_result.stdout_lines }}" 
   tags:
    - scored
    - section5.1
@@ -38,24 +45,38 @@
    - scored
    - section5.2  
    
-#- name: 5.3 Ensure Linux Kernel Capabilities are restricted within containers (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.3
-#
-#- name: 5.4 Ensure privileged containers are not used (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.4
-#
-#- name: 5.5 Ensure sensitive host system directories are not mounted on containers (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.5
-#
+- name: 5.3 Ensure Linux Kernel Capabilities are restricted within containers (Scored)
+  shell: for i in `docker ps --quiet`; do CAP_VAL=`docker inspect $i | grep -E 'CapAdd|CapDrop' | sed 's/[[:space:]]//g' | sed 's/,//g' | paste -s -d ' '`; echo $i = $CAP_VAL; done
+  ignore_errors: yes
+  register: cap_value
+  
+- debug: msg="List of container IDs and Linux Kernel Capabilities"
+
+- debug:
+    msg: "{{ cap_value.stdout_lines }}"
+  tags:
+   - scored
+   - section5.3
+   
+- name: 5.4 Ensure privileged containers are not used (Scored)
+  debug: msg="This is configuration is set when containers are run"
+  tags:
+   - scored
+   - section5.4
+
+- name: 5.5 Ensure sensitive host system directories are not mounted on containers (Scored)
+  shell: for i in `docker ps --quiet --all`; do VOL_LN=`docker inspect $i | grep -En 'Volumes|[[:space:]]},' | grep -v VolumesFrom | grep -A1 Volumes | sed 's|:||g' | awk '{print $1}' | paste -s -d ','`; VOL_LIST=`docker inspect $i | sed -n "$VOL_LN"p`; echo $i = $VOL_LIST; echo " "; done
+  ignore_errors: yes
+  register: result_volumes
+  
+- debug: msg="List of container IDs and their mounted directories"
+
+- debug:
+    msg: "{{ result_volumes.stdout_lines }}"
+  tags:
+   - scored
+   - section5.5
+
 #- name: 5.6 Ensure ssh is not run within containers (Scored)
 #  debug: msg="This is configuration is set when containers are run"
 #  tags:
@@ -82,12 +103,19 @@
    - scored
    - section5.8
 
-#- name: 5.9 Ensure the host's network namespace is not shared (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.9
+- name: 5.9 Ensure the host's network namespace is not shared (Scored)
+  shell: for i in `docker ps --quiet --all`; do NETWORKMODE=`docker inspect $i | grep "NetworkMode" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i $NETWORKMODE; done
+  ignore_errors: yes
+  register: networkmode_result
 
+- debug: msg="List of container Ids and their NetworkMode. Containers should not have NetworkMode=host"
+  
+- debug:
+    msg: "{{ networkmode_result.stdout_lines }}"  
+  tags:
+   - scored
+   - section5.9
+   
 - name: 5.10 Ensure memory usage for container is limited (Scored)
   shell: for i in `docker ps --quiet --all`; do MEM_SET=`docker inspect $i | grep '"Memory":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $MEM_SET"; done
   ignore_errors: yes
@@ -102,7 +130,7 @@
    - section5.10
 
 - name: 5.11 Ensure CPU priority is set appropriately on the container (Scored)
-  shell: for i in `docker ps --quiet --all`; do CPU_SET=`docker inspect $i | grep '"NanoCpus":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $CPU_SET"; done
+  shell: for i in `docker ps --quiet --all`; do CPU_SET=`docker inspect $i | grep '"CpuShares":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $CPU_SET"; done
   ignore_errors: yes
   register: cpu_shares
   
@@ -164,12 +192,19 @@
 #  tags:
 #   - scored
 #   - section5.16
-#
-#- name: 5.17 Ensure host devices are not directly exposed to containers (Not Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - not_scored
-#   - section5.17
+
+- name: 5.17 Ensure host devices are not directly exposed to containers (Not Scored)
+  shell: for i in `docker ps --quiet --all`; do DEVICES=`docker inspect $i | grep Devices | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; echo $i $DEVICES; echo " "; done
+  ignore_errors: yes
+  register: devices_result
+
+- debug: msg="List of container Ids and their Devices."
+
+- debug: 
+    msg: "{{ devices_result.stdout_lines }}"   
+  tags:
+   - not_scored
+   - section5.17
 
 - name: 5.18 Ensure the default ulimit is overwritten at runtime, only if needed (Not Scored)
   shell: for i in `docker ps --quiet --all`; do MAP_1=`docker inspect $i | grep -E '"Ulimits":|"Name":|"Hard":|"Soft":' | grep -A6 Ulimits | grep -v Ulimits| sed 's|,||g' | sed 's|[[:space:]]||g'| sed -n "1,3"p | paste -s -d ' '`;  MAP_2=`docker inspect $i | grep -E '"Ulimits":|"Name":|"Hard":|"Soft":' | grep -A6 Ulimits | grep -v Ulimits| sed 's|,||g' | sed 's|[[:space:]]||g'| sed -n "4,6"p | paste -s -d ' '`;  echo $i Ulimits=$MAP_1 $MAP_2; done
@@ -189,18 +224,32 @@
 #  tags:
 #   - scored
 #   - section5.19
-#
-#- name: 5.20 Ensure the host's UTS namespace is not shared (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.20
-#
-#- name: 5.21 Ensure the default seccomp profile is not Disabled (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.21
+
+- name: 5.20 Ensure the host's UTS namespace is not shared (Scored)
+  shell: for i in `docker ps --quiet --all`; do UTSMODE=`docker inspect $i | grep UTSMode | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; echo $i $UTSMODE; echo " "; done
+  ignore_errors: yes
+  register: utsmode_result
+
+- debug: msg="Lists of container Ids and their UTSMode. Containers should not have uts=host"
+
+- debug: 
+    msg: "{{ utsmode_result.stdout_lines }}" 
+  tags:
+   - scored
+   - section5.20
+
+- name: 5.21 Ensure the default seccomp profile is not Disabled (Scored)
+  shell: for i in `docker ps --quiet --all`; do SECCOMP=`docker inspect $i | grep seccomp | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; if [ -z $SECCOMP ]; then echo $i seccomp='<no value>'; else echo $i $SECCOMP; fi; echo " "; done
+  ignore_errors: yes
+  register: seccomp_result
+  
+- debug: msg="Lists of container Ids and their seccomp profile. Containers should not seccomp=unconfined"
+
+- debug: 
+    msg: "{{ seccomp_result.stdout_lines }}" 
+  tags:
+   - scored
+   - section5.21
 
 - name: 5.22 Ensure docker exec commands are not used with privileged option (Scored)
   shell: ausearch -k docker | grep exec | grep privileged | wc -l
@@ -248,18 +297,25 @@
    - scored
    - section5.23
 
-#- name: 5.24 Ensure cgroup usage is confirmed (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.24
+- name: 5.24 Ensure cgroup usage is confirmed (Scored)
+  shell: for i in `docker ps --quiet --all`; do CGROUPPARENT=`docker inspect $i | grep CgroupParent | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; echo $i $CGROUPPARENT; echo " "; done
+  ignore_errors: yes
+  register: cgroup_result
+  
+- debug: msg="List of container Ids and their cgroup. By default containers are running docker cgroup."
+  
+- debug: 
+    msg: "{{ cgroup_result.stdout_lines }}"  
+  tags:
+   - scored
+   - section5.24
    
 - name: 5.25 Ensure the container is restricted from acquiring additional privileges (Scored)
-  shell: for i in `docker ps --quiet --all`; do SEC_OPT=`docker inspect $i | sed -n '/SecurityOpt/,/\]/p' | grep -v SecurityOpt | grep -v ']' | sed 's|,||g' | sed 's|[[:space:]]||g' | paste -s -d ' '`; echo $i SecurityOpt=$SEC_OPT; done
+  shell: for i in `docker ps --quiet --all`; do SEC_OPT=`docker inspect $i | grep -i no-new-privileges | sed 's|,||g' | sed 's|[[:space:]]||g'`; if [ -z $SEC_OPT ]; then echo $i no-new-privileges=; else echo $i $SEC_OPT; done
   ignore_errors: yes
   register: additional_privileges  
   
-- debug: msg="Security options currently configured for the containers should include no-new-privileges. See Control 2.18"
+- debug: msg="Security options currently configured for the containers should include no-new-privileges."
 
 - debug: 
     msg: "{{ additional_privileges.stdout_lines }}"

@@ -195,14 +195,14 @@
    - scored
    - section1.10
 
+- stat:
+    path: /etc/docker/daemon.json
+  register: path_docker_daemon 
+  
 - name: 1.11 Ensure auditing is configured for Docker files and directories - /etc/docker/daemon.json (Scored)
   shell: auditctl -l | grep /etc/docker/daemon.json | wc -l
   ignore_errors: yes
   register: audit_result
-
-- stat:
-    path: /etc/docker/daemon.json
-  register: path_docker_daemon 
 
 - debug: msg="N/A - Docker files - /etc/docker/daemon.json does not exists"
   when: audit_result.stdout == '0' and path_docker_daemon.stat.exists == false

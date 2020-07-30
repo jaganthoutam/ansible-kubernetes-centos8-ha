@@ -305,26 +305,45 @@
     path: "{{ config_file }}"
   register: st
   
-#- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: userland-proxy
-#    value: false
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section2.15
+- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
+  shell: grep '"userland-proxy"' "{{ config_file }}" | wc -l
+  ignore_errors: yes
+  register: result
+  when: st.stat.exists == True
+  
+- shell: grep '"userland-proxy"' "{{ config_file }}" | grep false | wc -l
+  ignore_errors: yes
+  register: result_false
+  when: st.stat.exists == True and result.stdout != '0'    
 
-#- name: "2.16 Ensure daemon-wide custom seccomp profile is applied, if needed (Not Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: seccomp-profile
-#    value: "{{ seccomp_profile }}"
-#  when: seccomp_profile is defined and seccomp_profile != ''
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section2.16
+- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout == '0'
+  
+- shell: MATCH_LINE=`grep -n '"userland-proxy"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/true/false/g' "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout == '0'
+  
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == False  
+
+- debug: msg="Userland Proxy is Disabled"
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout != '0'  
+  tags:
+   - scored
+   - section2.15
+
+- name: "2.16 Ensure daemon-wide custom seccomp profile is applied, if needed (Not Scored)"
+  jsonpatch: 
+    file: "{{ config_file }}"
+    key: seccomp-profile
+    value: "{{ seccomp_profile }}"
+  when: seccomp_profile is defined and seccomp_profile != ''
+  notify: Reload docker
+  tags:
+   - scored
+   - section2.16
 
 - stat:
     path: "{{ config_file }}"
