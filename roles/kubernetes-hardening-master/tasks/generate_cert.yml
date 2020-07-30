@@ -70,21 +70,11 @@
 
 - name: Copy kubeconfig.sh
   template:
-    src: "../templates/kubeconfig_prod.j2"
+    src: "../templates/kubeconfig.j2"
     dest: "/etc/kubernetes/kubeconfig.sh"
     owner: "root"
     group: "root"
     mode: 0700
-  when: "'kubernetes_haproxy' in groups"
-
-- name: Copy kubeconfig.sh
-  template:
-    src: "../templates/kubeconfig_nonprod.j2"
-    dest: "/etc/kubernetes/kubeconfig.sh"
-    owner: "root"
-    group: "root"
-    mode: 0700
-  when: "'kubernetes_haproxy' not in groups"
   
 - name: Generate kubeconfig file
   shell: "./kubeconfig.sh"
