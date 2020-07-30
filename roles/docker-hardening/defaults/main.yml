@@ -2,17 +2,17 @@
 # defaults file for cis-docker-ce
 
 
-#section_1: true
+section_1: true
 
-#section_2: true
+section_2: true
 
-#section_3: true
+section_3: true
 
 section_4: true
 
-#section_5: true
+section_5: true
 
-#section_6: true
+section_6: true
 
 trusted_users:
   - kong
