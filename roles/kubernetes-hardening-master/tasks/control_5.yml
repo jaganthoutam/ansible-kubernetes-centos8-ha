@@ -108,6 +108,7 @@
 - name: 5.1.5 Ensure that default service accounts are not actively used. (Scored) -  Type is Manual
   shell: "kubectl create -f /etc/kubernetes/policies/service-account.yaml"
   when: not(sa.stdout.find('harden-sa') != -1)
+  ignore_errors: True
 
 - name: 5.1.6 Ensure that Service Account Tokens are only mounted where necessary (Not Scored) -  Type is Manual
   debug: msg="Modify the definition of pods and service accounts which do not need to mount service tokens to disable it. Pods mounted without service account tokens will not be able to communicate with the API server, except where the resource is available to unauthenticated principals."
@@ -179,7 +180,7 @@
   debug: msg="Ensure that these namespaces are the ones you need and are adequately administered as per your requirements."
 
 - name: 5.6.1 Create administrative boundaries between resources using namespaces (Not Scored) -  Type is Manual
-  shell: "kubectl create ns harden-ns"
+  shell: "kubectl get ns"
   register: ns
 
 - name: 5.6.1 Create administrative boundaries between resources using namespaces (Not Scored) -  Type is Manual
