@@ -84,7 +84,7 @@
    - section5.6
 
 - name: 5.7 Ensure privileged ports are not mapped within containers (Scored)
-  shell: for i in `docker ps --quiet`; do if [[ `docker inspect $i | grep '"Ports":' | grep '{},' | wc -l` == 1 ]]; then PORT_SET=`docker inspect $i | grep '"Ports":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
+  shell: for i in `docker ps --quiet`; do if [ `docker inspect $i | grep \"Ports\" | grep "\{\}" | wc -l` -gt 0 ]; then PORT_SET=`docker inspect $i | grep \"Ports\" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
   ignore_errors: yes
   register: result_ports
   
@@ -109,7 +109,7 @@
 
 - debug: msg="Review the list and ensure that the ports mapped are the ones that are really needed for the container."
     
-- shell: for i in `docker ps --quiet`; do if [[ `docker inspect $i | grep '"Ports":' | grep '{},' | wc -l` == 1 ]]; then PORT_SET=`docker inspect $i | grep '"Ports":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
+- shell: for i in `docker ps --quiet`; do if [ `docker inspect $i | grep \"Ports\" | grep "\{\}" | wc -l` -gt 0 ]; then PORT_SET=`docker inspect $i | grep \"Ports\" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
   ignore_errors: yes
   register: container_ports 
   
@@ -172,7 +172,7 @@
    - section5.12
 
 - name: 5.13 Ensure incoming container traffic is binded to a specific host interface (Scored)
-  shell: for i in `docker ps --quiet`; do if [[ `docker inspect $i | grep '"Ports":' | grep '{},' | wc -l` == 1 ]]; then PORT_SET=`docker inspect $i | grep '"Ports":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g'  | sed 's/,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
+  shell: for i in `docker ps --quiet`; do if [ `docker inspect $i | grep \"Ports\" | grep "\{\}" | wc -l` -gt 0 ]; then PORT_SET=`docker inspect $i | grep \"Ports\" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g'  | sed 's/\,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
   ignore_errors: yes
   register: host_interface
   
