@@ -145,23 +145,23 @@
    - section3.13
    - section3.14
 
-#- stat: path=/var/run/docker.sock
-#  register: res
-#
-#- name: |
-#        "3.15 Ensure that Docker socket file ownership is set to root:docker (Scored)"
-#        "3.16 Ensure that Docker socket file permissions are set to 660 or more restrictive (Scored)"
-#  file:
-#    path: /var/run/docker.sock
-#    owner: root
-#    group: docker
-#    mode: 0660
-#    state: file
-#  when: res.stat.exists == true
-#  tags:
-#   - scored
-#   - section3.15
-#   - section3.16
+- stat: path=/var/run/docker.sock
+  register: res
+
+- name: |
+        "3.15 Ensure that Docker socket file ownership is set to root:docker (Scored)"
+        "3.16 Ensure that Docker socket file permissions are set to 660 or more restrictive (Scored)"
+  file:
+    path: /var/run/docker.sock
+    owner: root
+    group: docker
+    mode: 0660
+    state: file
+  when: res.stat.exists == true
+  tags:
+   - scored
+   - section3.15
+   - section3.16
 
 
 - stat: path=/etc/docker/daemon.json
