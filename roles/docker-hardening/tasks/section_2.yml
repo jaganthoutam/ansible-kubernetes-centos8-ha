@@ -136,53 +136,59 @@
    - section2.7
    
 - name: "2.8 Enable user namespace support (Scored)"
-  lineinfile:
-    path: "{{ item }}"
-    line: dockremap:231072:65536
-  with_items:
-    - /etc/subgid
-    - /etc/subuid
+  debug: msg="Docker won't start if this is set."
   tags:
    - scored
-   - section2.8
-
-- stat:
-    path: "{{ config_file }}"
-  register: st
-  
-- name: "2.8 Enable user namespace support (Scored)"
-  shell: grep '"userns-remap"' "{{ config_file }}" | wc -l
-  ignore_errors: yes
-  register: result
-  when: st.stat.exists == True
-  
-- shell: grep '"userns-remap"' "{{ config_file }}" | grep '"default"' | wc -l
-  ignore_errors: yes
-  register: result_default
-  when: st.stat.exists == True and result.stdout != '0'
-
-- shell: grep '"userns-remap"' "{{ config_file }}" | awk '{print $2}' | sed 's|[",]||g'
-  ignore_errors: yes
-  register: userns_value
-  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'
-  
-- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == True and result.stdout == '0'
-  
-- shell: MATCH_LINE=`grep -n '"userns-remap"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/{{ userns_value }}/\"default\"/g' "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout == '0'
-  
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == False  
-
-- debug: msg="User namespace support already enabled"
-  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'  
-  tags:
-   - scored
-   - section2.8
+   - section2.8   
+   
+#- name: "2.8 Enable user namespace support (Scored)"
+#  lineinfile:
+#    path: "{{ item }}"
+#    line: dockremap:231072:65536
+#  with_items:
+#    - /etc/subgid
+#    - /etc/subuid
+#  tags:
+#   - scored
+#   - section2.8
+#
+#- stat:
+#    path: "{{ config_file }}"
+#  register: st
+#  
+#- name: "2.8 Enable user namespace support (Scored)"
+#  shell: grep '"userns-remap"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: grep '"userns-remap"' "{{ config_file }}" | grep '"default"' | wc -l
+#  ignore_errors: yes
+#  register: result_default
+#  when: st.stat.exists == True and result.stdout != '0'
+#
+#- shell: grep '"userns-remap"' "{{ config_file }}" | awk '{print $2}' | sed 's|[",]||g'
+#  ignore_errors: yes
+#  register: userns_value
+#  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'
+#  
+#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: MATCH_LINE=`grep -n '"userns-remap"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/{{ userns_value }}/\"default\"/g' "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="User namespace support already enabled"
+#  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'  
+#  tags:
+#   - scored
+#   - section2.8
 
 #- name: "2.9 Ensure the default cgroup usage has been confirmed (Scored)"
 #  jsonpatch: 
@@ -274,7 +280,7 @@
 #  register: st
 
 - name: "2.14 Ensure live restore is Enabled (Scored)"
-  debug: msg="Docker daemon stops running when live-restore is set to true."
+  debug: msg="Docker won't start if live-restore is set to true."
   tags:
    - scored
    - section2.14
