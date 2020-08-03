@@ -197,13 +197,6 @@
    - scored
    - section5.14
    
-   root@ip-172-31-24-145:~# docker ps --quiet --all | xargs docker inspect --format '{{ .Id }}: PidMode={{ .HostConfig.PidMode }}'
-504b61616bb1e19bed73129332ac28adf41bf94ddd19f849e2d4b42f5a08ac0e: PidMode=
-d7d917fa9ef4fe1ea791dcad17f4c126dc2102ef8a152dc7b728a0323c0ceccd: PidMode=
-57120224fb9e6a23dff9bd2131133a84c1b4f43c8c9b594c6d09a452e893f6c8: PidMode=
-root@ip-172-31-24-145:~#
-
-
 - name: 5.15 Ensure the host's process namespace is not shared (Scored)
   shell: for i in `docker ps --quiet --all`; do PID_MODE=`docker inspect $i | grep '"PidMode":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i $PID_MODE; done
   ignore_errors: yes
