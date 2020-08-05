@@ -110,30 +110,36 @@
   tags:
    - scored
    - section2.6
-
-- stat:
-    path: "{{ config_file }}"
-  register: st
-  
+   
 - name: "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
-  shell: grep '"default-ulimits"' "{{ config_file }}" | wc -l
-  ignore_errors: yes
-  register: result
-  when: st.stat.exists == True
-  
-- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == True and result.stdout == '0'
-  
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
-  notify: Reload docker
-  when: st.stat.exists == False  
-
-- debug: msg="Default ulimit is already configured."
-  when: st.stat.exists == True and result.stdout != '0'
+  debug: msg="N/A Affects successful start up of application."
   tags:
    - not_scored
-   - section2.7
+   - section2.7   
+
+#- stat:
+#    path: "{{ config_file }}"
+#  register: st
+#  
+#- name: "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
+#  shell: grep '"default-ulimits"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="Default ulimit is already configured."
+#  when: st.stat.exists == True and result.stdout != '0'
+#  tags:
+#   - not_scored
+#   - section2.7
    
 - name: "2.8 Enable user namespace support (Scored)"
   debug: msg="Docker won't start if this is set."
