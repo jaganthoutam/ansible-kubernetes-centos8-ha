@@ -22,8 +22,8 @@ users_list:
   - kong
   - root  
 
-src_file: /root/hardening_docker_test/ansible-kubernetes-centos8-ha/roles/docker-hardening/templates/newextfile.cnf.j2
-src_ufile: /root/hardening_docker_test/ansible-kubernetes-centos8-ha/roles/docker-hardening/templates/ldaemon.json
+src_file: /root/ansible-kubernetes-centos8-ha/roles/docker-hardening/templates/newextfile.cnf.j2
+src_ufile: /root/ansible-kubernetes-centos8-ha/roles/docker-hardening/templates/ldaemon.json
 config_file: /etc/docker/daemon.json
 
 dockerd_via_network: false

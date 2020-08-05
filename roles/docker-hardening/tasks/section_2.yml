@@ -121,11 +121,11 @@
   register: result
   when: st.stat.exists == True
   
-- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == True and result.stdout == '0'
   
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == False  
 
@@ -172,7 +172,7 @@
 #  register: userns_value
 #  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'
 #  
-#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
 #  when: st.stat.exists == True and result.stdout == '0'
 #  
@@ -180,7 +180,7 @@
 #  notify: Reload docker
 #  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout == '0'
 #  
-#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
 #  when: st.stat.exists == False  
 #
@@ -259,7 +259,7 @@
 #  register: result_true
 #  when: st.stat.exists == True and result.stdout != '0'    
 #
-#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
 #  when: st.stat.exists == True and result.stdout == '0'
 #  
@@ -267,7 +267,7 @@
 #  notify: Reload docker
 #  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
 #  
-#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
 #  when: st.stat.exists == False  
 #
@@ -296,7 +296,7 @@
 #  register: result_true
 #  when: st.stat.exists == True and result.stdout != '0'    
 #
-#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|live-restore|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|live-restore|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
 #  when: st.stat.exists == True and result.stdout == '0'
 #  
@@ -304,7 +304,7 @@
 #  notify: Reload docker
 #  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
 #  
-#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|live-restore|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|live-restore|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
 #  when: st.stat.exists == False  
 #
@@ -329,7 +329,7 @@
   register: result_false
   when: st.stat.exists == True and result.stdout != '0'    
 
-- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == True and result.stdout == '0'
   
@@ -337,7 +337,7 @@
   notify: Reload docker
   when: st.stat.exists == True and result.stdout != '0' and result_false.stdout == '0'
   
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == False  
 
@@ -373,7 +373,7 @@
   register: result_false
   when: st.stat.exists == True and result.stdout != '0'    
 
-- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|experimental|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|experimental|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == True and result.stdout == '0'
   
@@ -381,7 +381,7 @@
   notify: Reload docker
   when: st.stat.exists == True and result.stdout != '0' and result_false.stdout == '0'
   
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|experimental|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|experimental|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == False  
 
@@ -406,7 +406,7 @@
   register: result_true
   when: st.stat.exists == True and result.stdout != '0'    
 
-- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|no-new-privileges|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|no-new-privileges|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == True and result.stdout == '0'
   
@@ -414,7 +414,7 @@
   notify: Reload docker
   when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
   
-- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|no-new-privileges|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|no-new-privileges|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
   when: st.stat.exists == False  
 
