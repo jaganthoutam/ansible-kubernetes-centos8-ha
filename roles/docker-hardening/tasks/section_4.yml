@@ -52,21 +52,27 @@
    - not_scored
    - section4.4
 
-- stat:
-    path: /etc/environment
-  register: result_stat
-  
 - name: 4.5 Ensure Content trust for Docker is Enabled (Scored)
-  lineinfile:
-    path: /etc/environment
-    line: DOCKER_CONTENT_TRUST=1
-  when: result_stat.stat.exists == true
-  
-- debug: msg="N/A /etc/environment does not exists."
-  when: result_stat.stat.exists == false  
+  debug: msg="N/A Enabling Content trust affects the Docker build process."
   tags:
-   - scored
-   - section4.5
+    - scored
+    - section4.5
+
+#- stat:
+#    path: /etc/environment
+#  register: result_stat
+#  
+#- name: 4.5 Ensure Content trust for Docker is Enabled (Scored)
+#  lineinfile:
+#    path: /etc/environment
+#    line: DOCKER_CONTENT_TRUST=1
+#  when: result_stat.stat.exists == true
+#  
+#- debug: msg="N/A /etc/environment does not exists."
+#  when: result_stat.stat.exists == false  
+#  tags:
+#   - scored
+#   - section4.5
    
 - name: 4.6 Ensure HEALTHCHECK instructions have been added to the container image (Scored)
   shell: for i in `docker ps --quiet --all`; do HEALTH=`docker inspect $i | grep -E -A6 'Healthcheck|Test' | grep -Ev 'Healthcheck|Test' | sed 's/"Interval"://g' | sed 's/"Timeout"://g' | sed 's/"Retries"://g' | sed 's/\]//g' | sed 's/[\"\,]//g' | sed 's/[[:space:]]//g' | sed 's/^$//g' | paste -s -d ' '`; echo "$i = [ $HEALTH ]"; done
