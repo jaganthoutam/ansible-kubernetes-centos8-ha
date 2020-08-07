@@ -15,3 +15,9 @@
 #   become: yes
 #   roles:
 #     - { role: kube-proxy, tags: ["kube-proxy"] }
+
+# - name: kube-apiserver
+#   hosts: kubernetes_masters
+#   become: yes
+#   roles:
+#     - { role: kube-apiserver, tags: ["kube-apiserver"] }

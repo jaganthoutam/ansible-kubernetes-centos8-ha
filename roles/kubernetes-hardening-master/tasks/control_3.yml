@@ -11,6 +11,10 @@
     dest: "/etc/kubernetes/policies/audit-policy.yaml" 
     mode: 0644
 
+- name: "Checker for kube-apiserver configuration"
+  shell: "cat {{ kubeapiserver_config }}"
+  register: presence_apiserver
+
 - name: "Checker for policies volumes"
   shell: "grep -Fx \"    name: policies\" {{ kubeapiserver_config }} | wc -l"
   register: presence_apiserver_volume
