@@ -127,7 +127,7 @@
   debug: msg="Modify the definition of pods and service accounts which do not need to mount service tokens to disable it. Pods mounted without service account tokens will not be able to communicate with the API server, except where the resource is available to unauthenticated principals."
 
 - name: "Audit: 5.1.6 Ensure that Service Account Tokens are only mounted where necessary (Not Scored) -  Type is Manual"
-  shell: "kubectl get sa harden-sa -o yaml"
+  shell: "kubectl get sa harden-sa -o yaml -n harden-ns"
   register: harden_sa_check
 - debug: var=harden_sa_check
 
