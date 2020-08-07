@@ -5,6 +5,6 @@
 - name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
   lineinfile:
     path: "{{ kubeapiserver_config }}"
-    insertafter: '- kube-apiserver'
+    insertafter: 'authorization-mode'
     line: '    - --anonymous-auth=false'
   when: presence_apiserver.stdout is not search('anonymous-auth')
