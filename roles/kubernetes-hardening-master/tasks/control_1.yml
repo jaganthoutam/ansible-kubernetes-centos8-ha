@@ -53,13 +53,42 @@
 - name: "1.1.21 Ensure that the Kubernetes PKI key file permissions are set to 600 (Not Scored)"
   shell: "chmod -R 600 /etc/kubernetes/pki/*.key"
 
-# I commented it because anonymous-auth=false is not supported with kubeadm install.
-# - name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
-#   lineinfile:
-#     path: "{{ kubeapiserver_config }}"
-#     insertafter: '- kube-apiserver'
-#     line: '    - --anonymous-auth=false'
-#   when: presence_apiserver.stdout is not search('anonymous-auth')
+- name: Copy policy json to directory
+  copy:
+    src: "../files/policy.json"
+    dest: "/etc/kubernetes/pki/policy.json" 
+    mode: 0644
+
+- name: Copy auth file to directory
+  copy:
+    src: "../files/known_users.csv"
+    dest: "/etc/kubernetes/pki/known_users.csv" 
+    mode: 0644
+
+- name: authorization-mode(RBAC) in kube-apiserver
+  shell: "sed -i '/authorization-mode/ s/$/,ABAC/' {{ kubeapiserver_config }}"
+  when: presence_apiserver.stdout is not search('ABAC')
+
+- name: authorization-policy-file in kube-apiserver
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --authorization-policy-file=/etc/kubernetes/pki/policy.json'
+  when: presence_apiserver.stdout is not search('authorization-policy-file')
+
+- name: basic-auth-file in kube-apiserver
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --basic-auth-file=/etc/kubernetes/pki/known_users.csv'
+  when: presence_apiserver.stdout is not search('basic-auth-file') 
+
+- name: 1.2.1 Ensure that the --anonymous-auth argument is set to false (Not Scored)
+  lineinfile:
+    path: "{{ kubeapiserver_config }}"
+    insertafter: '- kube-apiserver'
+    line: '    - --anonymous-auth=false'
+  when: presence_apiserver.stdout is not search('anonymous-auth')
 
 - name: 1.2.6 Ensure that the --kubelet-certificate-authority argument is set as appropriate (Scored)
   lineinfile:
