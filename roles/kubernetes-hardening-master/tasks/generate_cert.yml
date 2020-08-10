@@ -1,0 +1,96 @@
+- name: Copy crt file from master to node
+  command: "cat /etc/kubernetes/pki/apiserver.crt"
+  register: crt_init
+ 
+- name: Storing crt for node
+  local_action: copy content={{ crt_init.stdout }} dest={{ crt_file }}
+
+- name: Copy key file from master to node
+  command: "cat /etc/kubernetes/pki/apiserver.key"
+  register: key_init
+ 
+- name: Storing key for node
+  local_action: copy content={{ key_init.stdout }} dest={{ key_file }}
+
+- name: Install golang-cfssl
+  shell: |
+          curl -s -L -o /bin/cfssl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64
+          curl -s -L -o /bin/cfssljson https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64
+          curl -s -L -o /bin/cfssl-certinfo https://pkg.cfssl.org/R1.2/cfssl-certinfo_linux-amd64
+          chmod +x /bin/cfssl*
+
+- name: Copy kube-proxy-csr to directory
+  copy:
+    src: "../files/kube-proxy-csr.json"
+    dest: "/etc/kubernetes/kube-proxy-csr.json" 
+    mode: 0644
+
+- name: Copy ca-csr to directory
+  copy:
+    src: "../files/ca-csr.json"
+    dest: "/etc/kubernetes/ca-csr.json" 
+    mode: 0644
+
+- name: Copy ca-config to directory
+  copy:
+    src: "../files/ca-config.json"
+    dest: "/etc/kubernetes/ca-config.json" 
+    mode: 0644
+
+- name: Generate a CA certificate and private key
+  shell: "cfssl gencert -initca ca-csr.json | cfssljson -bare ca"
+  args:
+    chdir: "/etc/kubernetes"
+
+- name: Generate the kube-proxy client certificate and private key
+  shell: "cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=kubernetes kube-proxy-csr.json | cfssljson -bare kube-proxy"
+  args:
+    chdir: "/etc/kubernetes"
+
+- name: Copy ca.pem file from master to node
+  command: "cat /etc/kubernetes/ca.pem"
+  register: ca_init
+ 
+- name: Storing ca.pem for node
+  local_action: copy content={{ ca_init.stdout }} dest={{ ca_file }}
+
+- name: Copy kube-proxy.pem file from master to node
+  command: "cat /etc/kubernetes/kube-proxy.pem"
+  register: kubeproxypem_init
+ 
+- name: Storing kube-proxy.pem for node
+  local_action: copy content={{ kubeproxypem_init.stdout }} dest={{ kubeproxy_file }}
+
+- name: Copy kube-proxy-key.pem file from master to node
+  command: "cat /etc/kubernetes/kube-proxy-key.pem"
+  register: kubeproxypemkey_init
+ 
+- name: Storing kube-proxy-key.pem for node
+  local_action: copy content={{ kubeproxypemkey_init.stdout }} dest={{ kubeproxykey_file }}
+
+- name: Copy kubeconfig.sh
+  template:
+    src: "../templates/kubeconfig.j2"
+    dest: "/etc/kubernetes/kubeconfig.sh"
+    owner: "root"
+    group: "root"
+    mode: 0700
+  
+- name: Generate kubeconfig file
+  shell: "./kubeconfig.sh"
+  args:
+    chdir: "/etc/kubernetes"
+
+- name: Move the kubeconfig file to /etc/kubernetes
+  shell: "mv kube-proxy.kubeconfig /etc/kubernetes/proxy.conf"
+  args:
+    chdir: "/etc/kubernetes"
+
+- name: Copy kubeconfig file from master to node
+  command: "cat /etc/kubernetes/proxy.conf"
+  register: kubeconfig_init
+   
+- name: Storing kubeconfig for node
+  local_action: copy content={{ kubeconfig_init.stdout }} dest={{ kubeconfig_file }}
+
+

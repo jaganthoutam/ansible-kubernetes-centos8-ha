@@ -1,0 +1,4 @@
+---
+- name: Worker Nodes
+  include: control_4.yml
+  when: control_4 | bool

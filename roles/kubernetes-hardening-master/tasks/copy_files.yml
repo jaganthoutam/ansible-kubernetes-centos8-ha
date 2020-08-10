@@ -1,0 +1,35 @@
+- name: Copy ca.pem to node
+  copy:
+    src: "{{ ca_file }}"
+    dest: "{{ ca_file }}"
+    mode: '0644'
+
+- name: Copy ca.pem file
+  shell: "cat {{ ca_file }} > /etc/kubernetes/ca.pem"
+
+- name: Copy kube-proxy.pem to node
+  copy:
+    src: "{{ kubeproxy_file }}"
+    dest: "{{ kubeproxy_file }}"
+    mode: '0644'
+
+- name: Copy kube-proxy.pem file
+  shell: "cat {{ kubeproxy_file }} > /etc/kubernetes/kube-proxy.pem"
+
+- name: Copy kube-proxy-key.pem to node
+  copy:
+    src: "{{ kubeproxykey_file }}"
+    dest: "{{ kubeproxykey_file }}"
+    mode: '0644'
+
+- name: Copy kube-proxy-key.pem file
+  shell: "cat {{ kubeproxykey_file }} > /etc/kubernetes/kube-proxy-key.pem"
+
+- name: Copy kubeconfig to node
+  copy:
+    src: "{{ kubeconfig_file }}"
+    dest: "{{ kubeconfig_file }}"
+    mode: '0644'
+
+- name: Copy kubeconfig file
+  shell: "cat {{ kubeconfig_file }} > /etc/kubernetes/proxy.conf"

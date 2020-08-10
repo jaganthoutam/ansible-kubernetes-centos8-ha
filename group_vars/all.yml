@@ -47,13 +47,37 @@ control_plane_endpoint_port_ha: 8080
 install_metrics_server: true
 
 #Kubernetes Hardening
-control_1: true
+control_1: false
 control_2: false
-control_3: true
-control_4: true
+control_3: false
+generate_cert: false
+copy_files: false
+control_4: false
+control_5: false
 
 #kubeapiserver config
 kubeapiserver_config: /etc/kubernetes/manifests/kube-apiserver.yaml
 
-#kubelet config
+#etcd data directory
+etcd_data_directory: /var/lib/etcd
+
+#kubelet config - NEED TO CHANGE THE LOCATION
 kubelet_config: /usr/lib/systemd/system/kubelet.service.d/10-kubeadm.conf
+key_file: key_tls
+crt_file: crt_tls
+
+#kube-controller-manager config
+kube_controller_manager_config: /etc/kubernetes/manifests/kube-controller-manager.yaml
+
+#kube-scheduler config
+kube_scheduler_config: /etc/kubernetes/manifests/kube-scheduler.yaml
+
+#kube-proxy key and crt
+ca_file: ca_pem
+kubeproxy_file: kube_proxy_pem
+kubeproxykey_file: kube_proxy_key_pem
+
+#cni directory
+cni_directory: /etc/cni/net.d
+
+kubeconfig_file: proxy.conf
