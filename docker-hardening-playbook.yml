@@ -1,0 +1,6 @@
+---
+- name:  docker-hardening
+  hosts: target-machine
+  become: yes
+  roles:
+   - role: docker-hardening

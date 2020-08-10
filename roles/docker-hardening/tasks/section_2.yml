@@ -3,17 +3,31 @@
     path: "{{ config_file }}"
   register: st
 
-- copy:
-   dest: "{{ config_file }}"
-   content: {}
-  when: st.stat.exists == False
-
 - name: "2.1 Ensure network traffic is restricted between containers on the default bridge (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: icc
-    value: false
+  shell: grep '"icc"' "{{ config_file }}" | wc -l
+  ignore_errors: yes
+  register: result
+  when: st.stat.exists == True
+  
+- shell: grep '"icc"' "{{ config_file }}" | grep false | wc -l
+  ignore_errors: yes
+  register: result_false
+  when: st.stat.exists == True and result.stdout != '0'    
+
+- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|icc|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
   notify: Reload docker
+  when: st.stat.exists == True and result.stdout == '0'
+  
+- shell: MATCH_LINE=`grep -n '"icc"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/true/false/g' "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout == '0'
+  
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|icc|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == False  
+
+- debug: msg="Network traffic is restricted between containers on the default bridge. icc set to false"
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout != '0'  
   tags:
    - scored
    - section2.1
@@ -56,6 +70,10 @@
 #   - scored
 #   - section2.5
 
+- stat:
+    path: "{{ config_file }}"
+  register: st
+  
 - block:
     - name: Include Docker daemon configuration
       import_tasks: tls_certs.yml
@@ -92,48 +110,91 @@
   tags:
    - scored
    - section2.6
-
+   
 - name: "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: default-ulimits
-    value: {
-              'nofile': {
-                  'soft': "{{ default_ulimits_nofile_soft }}",
-                  'hard': "{{ default_ulimits_nofile_hard }}",
-                  'name': 'nofile'
-              },
-              'nproc': {
-                  'soft': "{{ default_ulimits_nproc_soft }}",
-                  'hard': "{{ default_ulimits_nproc_hard }}",
-                  'name': 'nproc'
-              }
-           }
-  notify: Reload docker
+  debug: msg="N/A Affects successful start up of application."
   tags:
    - not_scored
-   - section2.7
+   - section2.7   
 
+#- stat:
+#    path: "{{ config_file }}"
+#  register: st
+#  
+#- name: "2.7 Ensure the default ulimit is configured appropriately (Not Scored)"
+#  shell: grep '"default-ulimits"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_ufile }}" >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="Default ulimit is already configured."
+#  when: st.stat.exists == True and result.stdout != '0'
+#  tags:
+#   - not_scored
+#   - section2.7
+   
 - name: "2.8 Enable user namespace support (Scored)"
-  lineinfile:
-    path: "{{ item }}"
-    line: dockremap:231072:65536
-  with_items:
-    - /etc/subgid
-    - /etc/subuid
+  debug: msg="Docker won't start if this is set."
   tags:
    - scored
-   - section2.8
-
-- name: "2.8 Enable user namespace support (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: userns-remap
-    value: default
-  notify: Reload docker
-  tags:
-   - scored
-   - section2.8
+   - section2.8   
+   
+#- name: "2.8 Enable user namespace support (Scored)"
+#  lineinfile:
+#    path: "{{ item }}"
+#    line: dockremap:231072:65536
+#  with_items:
+#    - /etc/subgid
+#    - /etc/subuid
+#  tags:
+#   - scored
+#   - section2.8
+#
+#- stat:
+#    path: "{{ config_file }}"
+#  register: st
+#  
+#- name: "2.8 Enable user namespace support (Scored)"
+#  shell: grep '"userns-remap"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: grep '"userns-remap"' "{{ config_file }}" | grep '"default"' | wc -l
+#  ignore_errors: yes
+#  register: result_default
+#  when: st.stat.exists == True and result.stdout != '0'
+#
+#- shell: grep '"userns-remap"' "{{ config_file }}" | awk '{print $2}' | sed 's|[",]||g'
+#  ignore_errors: yes
+#  register: userns_value
+#  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'
+#  
+#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: MATCH_LINE=`grep -n '"userns-remap"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/{{ userns_value }}/\"default\"/g' "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userns-remap|g' | sed 's|value|\"default\"|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="User namespace support already enabled"
+#  when: st.stat.exists == True and result.stdout != '0' and result_default.stdout != '0'  
+#  tags:
+#   - scored
+#   - section2.8
 
 #- name: "2.9 Ensure the default cgroup usage has been confirmed (Scored)"
 #  jsonpatch: 
@@ -153,16 +214,16 @@
 #   - scored
 #   - section2.10
 
-- name: "2.11 Ensure that authorization for Docker client commands is enabled (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: authorization-plugins
-    value: "{{ authorization_plugins }}"
-  when: authorization_plugins is defined and (authorization_plugins|length>0)
-  notify: Reload docker
-  tags:
-   - scored
-   - section2.11
+#- name: "2.11 Ensure that authorization for Docker client commands is enabled (Scored)"
+#  jsonpatch: 
+#    file: "{{ config_file }}"
+#    key: authorization-plugins
+#    value: "{{ authorization_plugins }}"
+#  when: authorization_plugins is defined and (authorization_plugins|length>0)
+#  notify: Reload docker
+#  tags:
+#   - scored
+#   - section2.11
 
 - name: "2.11 Ensure that authorization for Docker client commands is enabled (Scored)"
   debug:
@@ -183,63 +244,188 @@
 #   - scored
 #   - section2.12
 
+#disable-legacy-registry is already removed in version v19.03.0
+- stat:
+    path: "{{ config_file }}"
+  register: st
+  
 - name: "2.13 Ensure operations on legacy registry (v1) are Disabled (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: disable-legacy-registry
-    value: true
-  notify: Reload docker
+  debug: msg="disable-legacy-registry is already removed in version v19.03.0"
   tags:
    - scored
    - section2.13
+   
+#  shell: grep '"disable-legacy-registry"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: grep '"disable-legacy-registry"' "{{ config_file }}" | grep true | wc -l
+#  ignore_errors: yes
+#  register: result_true
+#  when: st.stat.exists == True and result.stdout != '0'    
+#
+#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: MATCH_LINE=`grep -n '"disable-legacy-registry"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|disable-legacy-registry|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="Operations on legacy registry (v1) are already Disabled"
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout != '0'  
+
+
+#- stat:
+#    path: "{{ config_file }}"
+#  register: st
 
 - name: "2.14 Ensure live restore is Enabled (Scored)"
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: live-restore
-    value: true
-  notify: Reload docker
+  debug: msg="Docker won't start if live-restore is set to true."
   tags:
    - scored
    - section2.14
-
-#- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: userland-proxy
-#    value: false
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section2.15
+ 
+#- name: "2.14 Ensure live restore is Enabled (Scored)"
+#  shell: grep '"live-restore"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: grep '"live-restore"' "{{ config_file }}" | grep true | wc -l
+#  ignore_errors: yes
+#  register: result_true
+#  when: st.stat.exists == True and result.stdout != '0'    
 #
-#- name: "2.16 Ensure daemon-wide custom seccomp profile is applied, if needed (Not Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: seccomp-profile
-#    value: "{{ seccomp_profile }}"
-#  when: seccomp_profile is defined and seccomp_profile != ''
+#- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|live-restore|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
 #  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: MATCH_LINE=`grep -n '"live-restore"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|live-restore|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="Live restore is already Enabled"
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout != '0' 
 #  tags:
 #   - scored
-#   - section2.16
+#   - section2.14
 
-#- name: "2.17 Ensure experimental features are avoided in production (Scored)"
-#  jsonpatch: 
-#    file: "{{ config_file }}"
-#    key: experimental
-#    value: false
-#  notify: Reload docker
-#  tags:
-#   - scored
-#   - section2.17
+- stat:
+    path: "{{ config_file }}"
+  register: st
+  
+- name: "2.15 Ensure Userland Proxy is Disabled (Scored)"
+  shell: grep '"userland-proxy"' "{{ config_file }}" | wc -l
+  ignore_errors: yes
+  register: result
+  when: st.stat.exists == True
+  
+- shell: grep '"userland-proxy"' "{{ config_file }}" | grep false | wc -l
+  ignore_errors: yes
+  register: result_false
+  when: st.stat.exists == True and result.stdout != '0'    
 
-- name: "2.18 Ensure containers are restricted from acquiring new privileges (Scored)"
+- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout == '0'
+  
+- shell: MATCH_LINE=`grep -n '"userland-proxy"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/true/false/g' "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout == '0'
+  
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|userland-proxy|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == False  
+
+- debug: msg="Userland Proxy is Disabled"
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout != '0'  
+  tags:
+   - scored
+   - section2.15
+
+- name: "2.16 Ensure daemon-wide custom seccomp profile is applied, if needed (Not Scored)"
   jsonpatch: 
     file: "{{ config_file }}"
-    key: no-new-privileges
-    value: true
+    key: seccomp-profile
+    value: "{{ seccomp_profile }}"
+  when: seccomp_profile is defined and seccomp_profile != ''
   notify: Reload docker
+  tags:
+   - scored
+   - section2.16
+
+- stat:
+    path: "{{ config_file }}"
+  register: st
+  
+- name: "2.17 Ensure experimental features are avoided in production (Scored)"
+  shell: grep '"experimental"' "{{ config_file }}" | wc -l
+  ignore_errors: yes
+  register: result
+  when: st.stat.exists == True
+  
+- shell: grep '"experimental"' "{{ config_file }}" | grep false | wc -l
+  ignore_errors: yes
+  register: result_false
+  when: st.stat.exists == True and result.stdout != '0'    
+
+- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|experimental|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout == '0'
+  
+- shell: MATCH_LINE=`grep -n '"experimental"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/true/false/g' "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout == '0'
+  
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|experimental|g' | sed 's|value|false|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == False  
+
+- debug: msg="Experimental features are already avoided in production"
+  when: st.stat.exists == True and result.stdout != '0' and result_false.stdout != '0' 
+  tags:
+   - scored
+   - section2.17
+
+- stat:
+    path: "{{ config_file }}"
+  register: st
+  
+- name: 2.18 Ensure containers are restricted from acquiring new privileges (Scored)
+  shell: grep '"no-new-privileges"' "{{ config_file }}" | wc -l
+  ignore_errors: yes
+  register: result
+  when: st.stat.exists == True
+  
+- shell: grep '"no-new-privileges"' "{{ config_file }}" | grep true | wc -l
+  ignore_errors: yes
+  register: result_true
+  when: st.stat.exists == True and result.stdout != '0'    
+
+- shell: sed -i '/^$/d'  "{{ config_file }}"; sed -i '$d'  "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|no-new-privileges|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout == '0'
+  
+- shell: MATCH_LINE=`grep -n '"no-new-privileges"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
+  
+- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|no-new-privileges|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo "" >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+  notify: Reload docker
+  when: st.stat.exists == False  
+
+- debug: msg="Containers are already restricted from acquiring new privileges"
+  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout != '0' 
   tags:
    - scored
    - section2.18

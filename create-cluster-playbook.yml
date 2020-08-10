@@ -26,3 +26,5 @@
   - role: kubernetes
 
   - role: metrics-server
+  
+  - role: docker-hardening

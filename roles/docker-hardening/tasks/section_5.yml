@@ -1,111 +1,249 @@
+---
 - name: 5.1 Ensure AppArmor Profile is Enabled (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do APPARMOR=`docker inspect $i | grep AppArmorProfile | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; if [ -z $APPARMOR ]; then echo $i AppArmorProfile='<no value>'; else echo $i $APPARMOR; fi; echo " "; done
+  ignore_errors: yes
+  register: apparmor_result
+  
+- debug: msg="List of containers and their AppArmor Profile. Should be with defined apparmor or apparmor=docker-default"
+
+- debug: 
+    msg: "{{ apparmor_result.stdout_lines }}" 
   tags:
    - scored
    - section5.1
-
+   
 - name: 5.2 Ensure SELinux security options are set, if applicable (Scored)
-  jsonpatch: 
-    file: "{{ config_file }}"
-    key: selinux-enabled
-    value: true
-  notify: Reload docker
+  debug: msg="N/A kong is unable to start properly if this is enabled."
   tags:
    - scored
-   - section5.2
+   - section5.2  
+   
+#- stat:
+#    path: "{{ config_file }}"
+#  register: st   
+#
+#- name: 5.2 Ensure SELinux security options are set, if applicable (Scored)
+#  shell: grep '"selinux-enabled"' "{{ config_file }}" | wc -l
+#  ignore_errors: yes
+#  register: result
+#  when: st.stat.exists == True
+#  
+#- shell: grep '"selinux-enabled"' "{{ config_file }}" | grep true | wc -l
+#  ignore_errors: yes
+#  register: result_true
+#  when: st.stat.exists == True and result.stdout != '0'    
+#
+#- shell: sed -i '/^$/d' "{{ config_file }}"; sed -i '$d' "{{ config_file }}"; END_LINE=`cat "{{ config_file }}" | wc -l`; sed -i "$END_LINE"'s/$/,/g' "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|selinux-enabled|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout == '0'
+#  
+#- shell: MATCH_LINE=`grep -n '"selinux-enabled"' "{{ config_file }}" | sed 's|:||g' | awk '{print $1}'`; sed -i "$MATCH_LINE"'s/false/true/g' "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout == '0'
+#  
+#- shell: echo '{' >> "{{ config_file }}"; cat "{{ src_file }}" | sed 's|key|selinux-enabled|g' | sed 's|value|true|g' >> "{{ config_file }}"; echo '}' >> "{{ config_file }}"
+#  notify: Reload docker
+#  when: st.stat.exists == False  
+#
+#- debug: msg="SELinux security options are already set"
+#  when: st.stat.exists == True and result.stdout != '0' and result_true.stdout != '0'  
+#  tags:
+#   - scored
+#   - section5.2  
+   
+- name: 5.3 Ensure Linux Kernel Capabilities are restricted within containers (Scored)
+  shell: for i in `docker ps --quiet`; do CAP_VAL=`docker inspect $i | grep -E 'CapAdd|CapDrop' | sed 's/[[:space:]]//g' | sed 's/,//g' | paste -s -d ' '`; echo $i = $CAP_VAL; done
+  ignore_errors: yes
+  register: cap_value
+  
+- debug: msg="List of container IDs and Linux Kernel Capabilities"
 
-#- name: 5.3 Ensure Linux Kernel Capabilities are restricted within containers (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.3
-#
-#- name: 5.4 Ensure privileged containers are not used (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.4
-#
-#- name: 5.5 Ensure sensitive host system directories are not mounted on containers (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.5
-#
-#- name: 5.6 Ensure ssh is not run within containers (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.6
-#
-#- name: 5.7 Ensure privileged ports are not mapped within containers (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.7
+- debug:
+    msg: "{{ cap_value.stdout_lines }}"
+  tags:
+   - scored
+   - section5.3
+   
+- name: 5.4 Ensure privileged containers are not used (Scored)
+  debug: msg="This is configuration is set when containers are run"
+  tags:
+   - scored
+   - section5.4
+
+- name: 5.5 Ensure sensitive host system directories are not mounted on containers (Scored)
+  shell: for i in `docker ps --quiet --all`; do VOL_LN=`docker inspect $i | grep -En 'Volumes|[[:space:]]},' | grep -v VolumesFrom | grep -A1 Volumes | sed 's|:||g' | awk '{print $1}' | paste -s -d ','`; VOL_LIST=`docker inspect $i | sed -n "$VOL_LN"p`; echo $i = $VOL_LIST; echo " "; done
+  ignore_errors: yes
+  register: result_volumes
+  
+- debug: msg="List of container IDs and their mounted directories"
+
+- debug:
+    msg: "{{ result_volumes.stdout_lines }}"
+  tags:
+   - scored
+   - section5.5
+
+- name: 5.6 Ensure ssh is not run within containers (Scored)
+  debug: msg="This is configuration is set when containers are run. ssh was not enabled in docker-compose files."
+  tags:
+   - scored
+   - section5.6
+
+- name: 5.7 Ensure privileged ports are not mapped within containers (Scored)
+  shell: for i in `docker ps --quiet`; do if [ `docker inspect $i | grep \"Ports\" | grep "\{\}" | wc -l` -gt 0 ]; then PORT_SET=`docker inspect $i | grep \"Ports\" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
+  ignore_errors: yes
+  register: result_ports
+  
+- debug: msg="Review the list and ensure that container ports are not mapped to host port numbers below 1024."
+
+- debug:
+    msg: "{{ result_ports.stdout_lines }}"
+  tags:
+   - scored
+   - section5.7
+
 
 - name: 5.8 Ensure only needed ports are open on the container (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do PORT_SET=`docker inspect $i | grep '"PublishAllPorts":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g' | paste -s -d ' '`; echo $i = $PORT_SET; done
+  ignore_errors: yes
+  register: publish_result
+  
+- debug: msg="Use the -p (lowercase) or --publish flag to explicitly define the ports that you need for a particular container instance. PublishAllPorts should false."
+
+- debug:
+    msg: "{{ publish_result.stdout_lines }}"
+
+- debug: msg="Review the list and ensure that the ports mapped are the ones that are really needed for the container."
+    
+- shell: for i in `docker ps --quiet`; do if [ `docker inspect $i | grep \"Ports\" | grep "\{\}" | wc -l` -gt 0 ]; then PORT_SET=`docker inspect $i | grep \"Ports\" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
+  ignore_errors: yes
+  register: container_ports 
+  
+- debug:
+    msg: "{{ container_ports.stdout_lines }}"
   tags:
    - scored
    - section5.8
 
-#- name: 5.9 Ensure the host's network namespace is not shared (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.9
+- name: 5.9 Ensure the host's network namespace is not shared (Scored)
+  shell: for i in `docker ps --quiet --all`; do NETWORKMODE=`docker inspect $i | grep "NetworkMode" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i $NETWORKMODE; done
+  ignore_errors: yes
+  register: networkmode_result
 
+- debug: msg="List of container Ids and their NetworkMode. Containers should not have NetworkMode=host"
+  
+- debug:
+    msg: "{{ networkmode_result.stdout_lines }}"  
+  tags:
+   - scored
+   - section5.9
+   
 - name: 5.10 Ensure memory usage for container is limited (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do MEM_SET=`docker inspect $i | grep '"Memory":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $MEM_SET"; done
+  ignore_errors: yes
+  register: memory_usage
+  
+- debug: msg="This is configuration is set when containers are run. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ memory_usage.stdout_lines }}"
   tags:
    - scored
    - section5.10
 
 - name: 5.11 Ensure CPU priority is set appropriately on the container (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do CPU_SET=`docker inspect $i | grep '"CpuShares":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $CPU_SET"; done
+  ignore_errors: yes
+  register: cpu_shares
+  
+- debug: msg="This is configuration is set when containers are run. Set in docker-compose files"
+  
+- debug: 
+    msg: "{{ cpu_shares.stdout_lines }}"  
   tags:
    - scored
    - section5.11
 
 - name: 5.12 Ensure the container's root filesystem is mounted as read only (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do RO_SET=`docker inspect $i | grep '"ReadonlyRootfs":' | sed 's/[[:space:]]//g' | sed 's/\,//g'`; echo "$i = $RO_SET"; done
+  ignore_errors: yes
+  register: root_filesystem  
+  
+- debug: msg="Start Docker with --read-only option. Set in docker-compose files"
+  
+- debug: 
+    msg: "{{ root_filesystem.stdout_lines }}" 
   tags:
    - scored
    - section5.12
 
 - name: 5.13 Ensure incoming container traffic is binded to a specific host interface (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet`; do if [ `docker inspect $i | grep \"Ports\" | grep "\{\}" | wc -l` -gt 0 ]; then PORT_SET=`docker inspect $i | grep \"Ports\" | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/\,//g'`; echo $i = $PORT_SET; else PORT_SET=`docker inspect $i | sed -n '/"Ports":/,/},/p' | sed 's/[[:space:]]//g' | sed 's/^$//g'  | sed 's/\,//g' | paste -s -d ' '`; echo $i = $PORT_SET; fi; done
+  ignore_errors: yes
+  register: host_interface
+  
+- debug: msg="Need to replace wildcard IP address 0.0.0.0 with specific host interface. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ host_interface.stdout_lines }}"   
   tags:
    - scored
    - section5.13
 
 - name: 5.14 Ensure 'on-failure' container restart policy is set to '5' (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do POLICY_NAME=`docker inspect $i | grep -E '"RestartPolicy":|"Name":' | grep -A1 '"RestartPolicy"' | grep -v RestartPolicy | sed 's/[[:space:]]//g' | sed 's/^$//g'`; POLICY_MAX=`docker inspect $i | grep -E '"RestartPolicy":|"MaximumRetryCount":' | grep -A1 '"RestartPolicy"' | grep -v RestartPolicy | sed 's/[[:space:]]//g' | sed 's/^$//g'`; echo $i RestartPolicy = $POLICY_NAME $POLICY_MAX; done
+  ignore_errors: yes
+  register: restart_policy
+  
+- debug: msg="Values should be RestartPolicyName=no and just RestartPolicyName= or RestartPolicyName=on-failure and MaximumRetryCount=<5. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ restart_policy.stdout_lines }}"   
   tags:
    - scored
    - section5.14
+   
+- name: 5.15 Ensure the host's process namespace is not shared (Scored)
+  shell: for i in `docker ps --quiet --all`; do PID_MODE=`docker inspect $i | grep '"PidMode":' | sed 's/[[:space:]]//g' | sed 's/^$//g' | sed 's/,//g'`; echo $i $PID_MODE; done
+  ignore_errors: yes
+  register: result_pidmode
+  
+- debug: msg="Do not start a container with --pid=host argument. Should not return pid=host"
+  
+- debug: 
+    msg: "{{ result_pidmode.stdout_lines }}"   
+  tags:
+   - scored
+   - section5.15
 
-#- name: 5.15 Ensure the host's process namespace is not shared (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.15
-#
 #- name: 5.16 Ensure the host's IPC namespace is not shared (Scored)
 #  debug: msg="This is configuration is set when containers are run"
 #  tags:
 #   - scored
 #   - section5.16
-#
-#- name: 5.17 Ensure host devices are not directly exposed to containers (Not Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - not_scored
-#   - section5.17
+
+- name: 5.17 Ensure host devices are not directly exposed to containers (Not Scored)
+  shell: for i in `docker ps --quiet --all`; do DEVICES=`docker inspect $i | grep Devices | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; echo $i $DEVICES; echo " "; done
+  ignore_errors: yes
+  register: devices_result
+
+- debug: msg="List of container Ids and their Devices."
+
+- debug: 
+    msg: "{{ devices_result.stdout_lines }}"   
+  tags:
+   - not_scored
+   - section5.17
 
 - name: 5.18 Ensure the default ulimit is overwritten at runtime, only if needed (Not Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do MAP_1=`docker inspect $i | grep -E '"Ulimits":|"Name":|"Hard":|"Soft":' | grep -A6 Ulimits | grep -v Ulimits| sed 's|,||g' | sed 's|[[:space:]]||g'| sed -n "1,3"p | paste -s -d ' '`;  MAP_2=`docker inspect $i | grep -E '"Ulimits":|"Name":|"Hard":|"Soft":' | grep -A6 Ulimits | grep -v Ulimits| sed 's|,||g' | sed 's|[[:space:]]||g'| sed -n "4,6"p | paste -s -d ' '`;  echo $i Ulimits=$MAP_1 $MAP_2; done
+  ignore_errors: yes
+  register: result_ulimit
+  
+- debug: msg="Should return Ulimits=<no value> for each container instance. Only override the default ulimit settings if needed. Set in docker-compose files"
+
+- debug: 
+    msg: "{{ result_ulimit.stdout_lines }}"   
   tags:
    - not_scored
    - section5.18
@@ -115,45 +253,114 @@
 #  tags:
 #   - scored
 #   - section5.19
-#
-#- name: 5.20 Ensure the host's UTS namespace is not shared (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.20
-#
-#- name: 5.21 Ensure the default seccomp profile is not Disabled (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.21
+
+- name: 5.20 Ensure the host's UTS namespace is not shared (Scored)
+  shell: for i in `docker ps --quiet --all`; do UTSMODE=`docker inspect $i | grep UTSMode | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; echo $i $UTSMODE; echo " "; done
+  ignore_errors: yes
+  register: utsmode_result
+
+- debug: msg="Lists of container Ids and their UTSMode. Containers should not have uts=host"
+
+- debug: 
+    msg: "{{ utsmode_result.stdout_lines }}" 
+  tags:
+   - scored
+   - section5.20
+
+- name: 5.21 Ensure the default seccomp profile is not Disabled (Scored)
+  shell: for i in `docker ps --quiet --all`; do SECCOMP=`docker inspect $i | grep seccomp | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; if [ -z $SECCOMP ]; then echo $i seccomp='<no value>'; else echo $i $SECCOMP; fi; echo " "; done
+  ignore_errors: yes
+  register: seccomp_result
+  
+- debug: msg="Lists of container Ids and their seccomp profile. Containers should not seccomp=unconfined"
+
+- debug: 
+    msg: "{{ seccomp_result.stdout_lines }}" 
+  tags:
+   - scored
+   - section5.21
 
 - name: 5.22 Ensure docker exec commands are not used with privileged option (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: ausearch -k docker | grep exec | grep privileged | wc -l
+  ignore_errors: yes
+  register: privileged_option
+  
+- debug: msg="Do not use --privileged option in docker exec command. privileged option not used"
+  when: privileged_option.stdout == '0'
+
+- shell: ausearch -k docker | grep exec | grep privileged
+  ignore_errors: yes
+  register: result_privileged
+  when: privileged_option.stdout != '0'
+
+- debug: msg="Do not use --privileged option in docker exec command. List of containers with privileged option"  
+  when: privileged_option.stdout != '0'
+
+- debug: 
+    msg: "{{ result_privileged.stdout_lines }}" 
+  when: privileged_option.stdout != '0'    
   tags:
    - scored
    - section5.22
 
 - name: 5.23 Ensure docker exec commands are not used with user option (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: ausearch -k docker | grep exec | grep user | wc -l
+  ignore_errors: yes
+  register: user_option
+  
+- debug: msg="Do not use --user option in docker exec command. user option not used."
+  when: user_option.stdout == '0'
+
+- shell: ausearch -k docker | grep exec | grep privileged
+  ignore_errors: yes
+  register: result_user
+  when: user_option.stdout != '0'
+
+- debug: msg="Do not use --user option in docker exec command. With user option."
+  when: user_option.stdout != '0'
+
+- debug: 
+    msg: "{{ result_user.stdout_lines }}"
+  when: user_option.stdout != '0'  
   tags:
    - scored
    - section5.23
 
-#- name: 5.24 Ensure cgroup usage is confirmed (Scored)
-#  debug: msg="This is configuration is set when containers are run"
-#  tags:
-#   - scored
-#   - section5.24
+- name: 5.24 Ensure cgroup usage is confirmed (Scored)
+  shell: for i in `docker ps --quiet --all`; do CGROUPPARENT=`docker inspect $i | grep CgroupParent | sed 's/[[:space:]]//g' | sed 's/^$//g'| sed 's/,//g'`; echo $i $CGROUPPARENT; echo " "; done
+  ignore_errors: yes
+  register: cgroup_result
+  
+- debug: msg="List of container Ids and their cgroup. By default containers are running docker cgroup."
+  
+- debug: 
+    msg: "{{ cgroup_result.stdout_lines }}"  
+  tags:
+   - scored
+   - section5.24
    
 - name: 5.25 Ensure the container is restricted from acquiring additional privileges (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do SEC_OPT=`docker inspect $i | grep -i no-new-privileges | sed 's|,||g' | sed 's/^$//g' | sed 's|[[:space:]]||g'`; if [[ -z $SEC_OPT ]]; then echo $i no-new-privileges=; else echo $i $SEC_OPT; fi; done
+  ignore_errors: yes
+  register: additional_privileges  
+  
+- debug: msg="Security options currently configured for the containers should include no-new-privileges."
+
+- debug: 
+    msg: "{{ additional_privileges.stdout_lines }}"
   tags:
    - scored
    - section5.25
 
 - name: 5.26 Ensure container health is checked at runtime (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do HEALTH_STATUS=`docker inspect $i | grep -E '"State":|"Health":|"Status":' | grep -A1 '"Health":' | grep '"Status":' | sed 's|,||g' | sed 's|[[:space:]]||g'`; echo $i Health=$HEALTH_STATUS; done
+  ignore_errors: yes
+  register: health_check 
+  
+- debug: msg="This configuration is set when containers are run. health is checked at runtime"
+  
+- debug: 
+    msg: "{{ health_check.stdout_lines }}"
   tags:
    - scored
    - section5.26
@@ -165,7 +372,14 @@
    - section5.27
 
 - name: 5.28 Ensure PIDs cgroup limit is used (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: for i in `docker ps --quiet --all`; do PIDS_LIMIT=`docker inspect $i | grep '"PidsLimit":' | sed 's|,||g' | sed 's|[[:space:]]||g'`; echo $i Health=$PIDS_LIMIT; done
+  ignore_errors: yes
+  register: pids_limit 
+  
+- debug: msg="This configuration is set when containers are run. All containers are set with PIDs cgroup limit"
+
+- debug: 
+    msg: "{{ pids_limit.stdout_lines }}"
   tags:
    - scored
    - section5.28
@@ -184,7 +398,24 @@
 #   - section5.30
 
 - name: 5.31 Ensure the Docker socket is not mounted inside any containers (Scored)
-  debug: msg="This is configuration is set when containers are run"
+  shell: docker ps --quiet --all | xargs docker inspect | grep docker.sock | wc -l
+  ignore_errors: yes
+  register: docker_socket 
+  
+- debug: msg="Docker socker not mounted inside any containers"
+  when: docker_socket.stdout == '0'
+
+- shell: for i in `docker ps --quiet --all`; do W_DOCKER_SOCK=`docker inspect $i | grep docker.sock | wc -l`; echo $i docker.sock=$W_DOCKER_SOCK; done;
+  ignore_errors: yes
+  register: docker_socket_w 
+  when: docker_socket.stdout != '0'
+  
+- debug: msg="Containers with Docker socker mounted inside."
+  when: docker_socket.stdout != '0'  
+
+- debug:
+    msg: "{{ docker_socket_w.stdout_lines }}"
+  when: docker_socket.stdout != '0'    
   tags:
    - scored
    - section5.31

@@ -1,16 +1,38 @@
-#- name: 6.1 Ensure image sprawl is avoided (Not Scored)
-#  #debug: msg="All images are instantiated"
-#  docker_prune:
-#    images: yes 
-#    images_filters:
-#      dangling: false 
-#  tags:
-#   - scored
-#   - section6.1
+- name: 6.1 Ensure image sprawl is avoided (Not Scored)
+  shell: docker images | awk '{print $3}'
+  ignore_errors: yes
+  register: result
+
+- debug: msg="Perform regular security audits of your host system and containers. Current list of images Id:"
+
+- debug:
+    msg: "{{ result.stdout_lines }}"
+  tags:
+   - scored
+   - section6.1
 
 - name: 6.2 Ensure container sprawl is avoided (Not Scored)
-  docker_prune:
-    containers: yes
+  shell: docker ps -a | grep Exited |  awk '{print $1}' | wc -l
+  ignore_errors: yes
+  register: result
+
+- debug: msg="N/A Current list of containers are all in Up status."
+  when: result.stdout == 0
+
+- shell: docker ps -a | grep Exited
+  ignore_errors: yes
+  register: result_exited
+  when: result.stdout != 0
+  
+- debug:
+    msg: "{{ result_exited.stdout_lines }}"  
+  when: result.stdout != 0    
   tags:
    - not_scored
    - section6.2
+  
+#- shell: docker rm $(docker ps -q -f status=exited)
+#  when: result.stdout != 0
+#  tags:
+#   - not_scored
+#   - section6.2
