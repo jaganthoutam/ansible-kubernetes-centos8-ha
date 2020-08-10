@@ -27,6 +27,7 @@
   blockinfile:
     dest: "{{ kubeapiserver_config }}"
     block: "{{ lookup('template', 'policies-volume.j2') }}"
+    marker: "## {mark} ANSIBLE MANAGED BLOCK FOR POLICIES VOLUME"
     insertafter: '  volumes:'
   when: presence_apiserver_volume.stdout=="0"
 
@@ -34,6 +35,7 @@
   blockinfile:
     dest: "{{ kubeapiserver_config }}"
     block: "{{ lookup('template', 'policies-volume-mounts.j2') }}"
+    marker: "## {mark} ANSIBLE MANAGED BLOCK FOR POLICIES VOLUME MOUNT"
     insertafter: '    volumeMounts:'
   when: presence_apiserver_mount.stdout=="0"
 
