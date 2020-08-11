@@ -24,26 +24,19 @@
   register: presence_apiserver_mount
 
 - name: Add volumes of policies
-  lineinfile:
+  blockinfile:
     dest: "{{ kubeapiserver_config }}"
+    block: "{{ lookup('template', 'policies-volume.j2') }}"
+    marker: "## {mark} ANSIBLE MANAGED BLOCK FOR POLICIES VOLUME"
     insertafter: '  volumes:'
-    line: "{{ item.line }}"
-  with_items:
-    - { line: '    name: policies' }
-    - { line: '      type: DirectoryOrCreate' }
-    - { line: '      path: /etc/kubernetes/policies' }
-    - { line: '  - hostPath:' }
   when: presence_apiserver_volume.stdout=="0"
 
 - name: Add volumes mounts of policies
-  lineinfile:
+  blockinfile:
     dest: "{{ kubeapiserver_config }}"
+    block: "{{ lookup('template', 'policies-volume-mounts.j2') }}"
+    marker: "## {mark} ANSIBLE MANAGED BLOCK FOR POLICIES VOLUME MOUNT"
     insertafter: '    volumeMounts:'
-    line: "{{ item.line }}"
-  with_items:
-    - { line: '      readOnly: true' }
-    - { line: '      name: policies' }
-    - { line: '    - mountPath: /etc/kubernetes/policies' }
   when: presence_apiserver_mount.stdout=="0"
 
 - name: |
